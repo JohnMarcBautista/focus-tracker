@@ -8,6 +8,7 @@
     "baseUrl": ".",
     "noEmit": true,
     "esModuleInterop": true,
+    "typeRoots": ["./src/types", "./node_modules/@types"],
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
