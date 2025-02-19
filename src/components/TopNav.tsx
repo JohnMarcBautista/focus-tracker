@@ -45,7 +45,7 @@ export default function TopNav() {
       <div className="text-xl font-bold">Focus Tracker</div>
       <div className="flex space-x-4">
         <Link href="/dashboard" className="hover:underline">Dashboard</Link>
-        <Link href="/tracker" className="hover:underline">Tracker</Link>
+        <Link href="/session" className="hover:underline">Session</Link>
         <Link href="/leaderboard" className="hover:underline">Leaderboard</Link>
 
         {session ? (

@@ -52,22 +52,6 @@ export default function Dashboard() {
     }
   };
 
-  const ensureAuthenticatedUser = async () => {
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !sessionData.session) {
-      return null;
-    }
-  
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError || !userData.user) {
-      return null;
-    }
-  
-    return userData.user;
-  };
-  
-  
-
   const stopTimer = async () => {
     if (isRunning && intervalId) {
         clearInterval(intervalId);
@@ -114,25 +98,8 @@ const fetchTotalFocusTime = async (user_id: string) => {
     setTotalFocusTime(Number(data) || 0);
 };
 
-
-
-  
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.replace("/auth");
-  };
-
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Navigation Bar */}
-      <nav className="bg-blue-600 p-4 text-white flex justify-between">
-        <h1 className="text-xl font-bold">Focus Tracker</h1>
-        <button onClick={handleLogout} className="bg-red-500 px-4 py-2 rounded">
-          Logout
-        </button>
-      </nav>
-
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center p-8">
         <h2 className="text-3xl font-semibold mb-4 text-black">
