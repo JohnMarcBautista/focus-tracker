@@ -11,12 +11,11 @@ export default function AuthCallback() {
     const handleAuthRedirect = async () => {
       const { data, error } = await supabase.auth.getSession();
 
-      console.log("Auth Callback - Session Data:", data);
       if (error || !data.session) {
         console.error("Auth Error:", error);
-        router.replace("/auth"); // Redirect back to login if session fails
+        router.replace("/auth/login"); // ✅ Redirect to `/auth/login` instead of `/auth`
       } else {
-        router.replace("/dashboard"); // ✅ Redirect to dashboard if logged in
+        router.replace("/dashboard"); // ✅ Send logged-in users to dashboard
       }
     };
 
