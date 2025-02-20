@@ -7,7 +7,8 @@ interface WindowFocusTrackerProps {
   onUpdateFocus: React.Dispatch<React.SetStateAction<number>>;
   onUpdateUnfocus: React.Dispatch<React.SetStateAction<number>>;
   onUpdateSwitches: React.Dispatch<React.SetStateAction<number>>;
-  lastTabSwitchTime?: number; // new prop: timestamp of last tab switch
+  lastTabSwitchTime?: number; // timestamp of last tab switch
+  onUpdateFocusState?: (isFocused: boolean) => void; // new callback for focus state
 }
 
 export function WindowFocusTracker({
@@ -16,6 +17,7 @@ export function WindowFocusTracker({
   onUpdateUnfocus,
   onUpdateSwitches,
   lastTabSwitchTime = 0,
+  onUpdateFocusState,
 }: WindowFocusTrackerProps) {
   const [isWindowFocused, setIsWindowFocused] = useState(document.hasFocus());
   const [focusTimeMs, setFocusTimeMs] = useState(0);
@@ -33,6 +35,7 @@ export function WindowFocusTracker({
       switchCountRef.current = 0;
       setWindowSwitchCount(0);
       setIsWindowFocused(document.hasFocus());
+      onUpdateFocusState?.(document.hasFocus());
       measureChunk();
 
       const interval = setInterval(() => {
@@ -43,7 +46,7 @@ export function WindowFocusTracker({
     } else {
       measureChunk();
     }
-  }, [isRunning]);
+  }, [isRunning, onUpdateFocusState]);
 
   // Update with fractional seconds.
   const measureChunk = () => {
@@ -63,16 +66,16 @@ export function WindowFocusTracker({
 
   useEffect(() => {
     if (!isRunning) return;
-
-    const THRESHOLD_MS = 500; // time within which we consider the event a result of a tab switch
+    const THRESHOLD_MS = 500; // adjust as needed
 
     const handleFocus = () => {
       if (!isRunning) return;
       measureChunk();
 
-      // If this focus event happens shortly after a tab switch, ignore it.
+      // If focus happens shortly after a tab switch, ignore counting it.
       if (performance.now() - lastTabSwitchTime < THRESHOLD_MS) {
         setIsWindowFocused(true);
+        onUpdateFocusState?.(true);
         wasFocusedRef.current = true;
         startTimeRef.current = performance.now();
         return;
@@ -83,6 +86,7 @@ export function WindowFocusTracker({
         onUpdateSwitches((prev) => prev + 1);
       }
       setIsWindowFocused(true);
+      onUpdateFocusState?.(true);
       wasFocusedRef.current = true;
       startTimeRef.current = performance.now();
     };
@@ -90,12 +94,13 @@ export function WindowFocusTracker({
     const handleBlur = () => {
       measureChunk();
       setTimeout(() => {
-        // If blur happens due to a tab switch, document.hidden will be true.
-        if (document.hidden || performance.now() - lastTabSwitchTime < THRESHOLD_MS) return;
+        if (document.hidden || performance.now() - lastTabSwitchTime < THRESHOLD_MS)
+          return;
         switchCountRef.current += 1;
         setWindowSwitchCount(switchCountRef.current);
         onUpdateSwitches((prev) => prev + 1);
         setIsWindowFocused(false);
+        onUpdateFocusState?.(false);
         wasFocusedRef.current = false;
         startTimeRef.current = performance.now();
       }, 0);
@@ -108,7 +113,7 @@ export function WindowFocusTracker({
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [isRunning, lastTabSwitchTime, onUpdateSwitches]);
+  }, [isRunning, lastTabSwitchTime, onUpdateSwitches, onUpdateFocusState]);
 
   useEffect(() => {
     if (isRunning) {
@@ -116,11 +121,6 @@ export function WindowFocusTracker({
     }
   }, [windowSwitchCount, isRunning, onUpdateSwitches]);
 
-  return (
-    <div className="text-black">
-      <p className="text-black">
-        Window Focused: {isWindowFocused ? "✅ Yes" : "❌ No"}
-      </p>
-    </div>
-  );
+  // Do not render internal UI.
+  return null;
 }

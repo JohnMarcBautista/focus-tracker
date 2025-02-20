@@ -7,7 +7,8 @@ interface TabTrackerProps {
   onUpdateActive: React.Dispatch<React.SetStateAction<number>>;
   onUpdateInactive: React.Dispatch<React.SetStateAction<number>>;
   onUpdateSwitches: React.Dispatch<React.SetStateAction<number>>;
-  onTabSwitch?: (time: number) => void; // new prop: receives timestamp of tab switch
+  onTabSwitch?: (time: number) => void; // receives timestamp of tab switch
+  onUpdateActiveState?: (isActive: boolean) => void; // new callback for active state
 }
 
 export function TabTracker({
@@ -16,6 +17,7 @@ export function TabTracker({
   onUpdateInactive,
   onUpdateSwitches,
   onTabSwitch,
+  onUpdateActiveState,
 }: TabTrackerProps) {
   const [isTabActive, setIsTabActive] = useState(!document.hidden);
   const [activeTimeMs, setActiveTimeMs] = useState(0);
@@ -31,6 +33,7 @@ export function TabTracker({
       startTimeRef.current = performance.now();
       wasTabActiveRef.current = !document.hidden;
       setIsTabActive(!document.hidden);
+      onUpdateActiveState?.(!document.hidden);
       measureChunk(); // Ensure no startup lag
 
       const interval = setInterval(() => {
@@ -41,7 +44,7 @@ export function TabTracker({
     } else {
       measureChunk();
     }
-  }, [isRunning]);
+  }, [isRunning, onUpdateActiveState]);
 
   // Update with fractional seconds for smoother UI updates.
   const measureChunk = () => {
@@ -77,6 +80,7 @@ export function TabTracker({
       }
 
       setIsTabActive(newActiveState);
+      onUpdateActiveState?.(newActiveState);
       wasTabActiveRef.current = newActiveState;
       startTimeRef.current = performance.now();
     };
@@ -85,11 +89,8 @@ export function TabTracker({
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [isRunning, onTabSwitch, onUpdateSwitches]);
+  }, [isRunning, onTabSwitch, onUpdateSwitches, onUpdateActiveState]);
 
-  return (
-    <div className="text-black">
-      <p className="text-black">Tab Active: {isTabActive ? "✅ Yes" : "❌ No"}</p>
-    </div>
-  );
+  // Do not render internal UI since SessionPage will show the status.
+  return null;
 }
