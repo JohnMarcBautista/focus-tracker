@@ -11,32 +11,27 @@ export default function SessionPage() {
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
 
-  // -----------------------------
-  // Stats for page/tab/window usage
-  // -----------------------------
+  // Stats for page/tab/window usage (using fractional seconds)
   const [tabActiveTime, setTabActiveTime] = useState(0);
   const [tabInactiveTime, setTabInactiveTime] = useState(0);
   const [windowFocusTime, setWindowFocusTime] = useState(0);
   const [windowUnfocusTime, setWindowUnfocusTime] = useState(0);
 
-  // 🆕 Switch counts
+  // Switch counts
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const [windowSwitchCount, setWindowSwitchCount] = useState(0);
 
-  // -----------------------------
-  // Timer logic for "duration"
-  // -----------------------------
+  // Timer logic for "duration" (in seconds)
   const [elapsedTime, setElapsedTime] = useState(0);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
 
-  // -----------------------------
   // Whether trackers are running
-  // -----------------------------
   const [isRunning, setIsRunning] = useState(false);
 
-  // -----------------------------
+  // Store the timestamp (in ms) of the last tab switch.
+  const [lastTabSwitchTime, setLastTabSwitchTime] = useState(0);
+
   // Check user session on mount
-  // -----------------------------
   useEffect(() => {
     const checkSession = async () => {
       const { data, error } = await supabase.auth.getSession();
@@ -49,9 +44,7 @@ export default function SessionPage() {
     checkSession();
   }, [router]);
 
-  // ----------------------------------
   // START FOCUS SESSION
-  // ----------------------------------
   const startFocusSession = () => {
     // Reset all usage stats
     setTabActiveTime(0);
@@ -59,7 +52,7 @@ export default function SessionPage() {
     setWindowFocusTime(0);
     setWindowUnfocusTime(0);
 
-    // 🆕 Reset switch counts
+    // Reset switch counts
     setTabSwitchCount(0);
     setWindowSwitchCount(0);
 
@@ -76,76 +69,69 @@ export default function SessionPage() {
     setIsRunning(true);
   };
 
-  // ----------------------------------
   // STOP FOCUS SESSION
-  // ----------------------------------
   const stopFocusSession = async () => {
-    // Capture final elapsedTime in a local variable
     const finalElapsedTime = elapsedTime;
-
-    // Stop the interval timer
     if (intervalId) {
       clearInterval(intervalId);
       setIntervalId(null);
     }
-
-    // Deactivate trackers
     setIsRunning(false);
-
-    // If user is logged in, insert final stats
-    if (session?.user) {
-      // Single row with all stats
-      const statsRow = {
-        user_id: session.user.id,
-        // Duration
-        duration: finalElapsedTime,
-
-        // Page/Tab/Window times
-        tab_active_time: tabActiveTime,
-        tab_inactive_time: tabInactiveTime,
-        window_focus_time: windowFocusTime,
-        window_unfocus_time: windowUnfocusTime,
-
-        // 🆕 Switch counts
-        tab_switches: tabSwitchCount,
-        window_switches: windowSwitchCount,
-
-        created_at: new Date().toISOString(),
-      };
-
-      console.log("Inserting stats row:", statsRow);
-
-      const { error } = await supabase
-        .from("focus_sessions") // Ensure "focus_sessions" has these columns
-        .insert(statsRow);
-
-      if (error) {
-        console.error("🔴 Error uploading session stats:", error.message);
-      } else {
-        console.log("✅ Session stats uploaded:", statsRow);
-        alert("Focus session ended! Stats uploaded.");
-      }
+  
+    // Adjust window switch count: subtract one window switch per two tab switches
+    const adjustedWindowSwitchCount = Math.max(
+      windowSwitchCount - Math.floor(tabSwitchCount / 2),
+      0
+    );
+  
+    // Prepare stats with rounded values (or update your schema to accept fractions)
+    const statsRow = {
+      user_id: session?.user.id,
+      duration: finalElapsedTime,
+      tab_active_time: Math.floor(tabActiveTime),
+      tab_inactive_time: Math.floor(tabInactiveTime),
+      window_focus_time: Math.floor(windowFocusTime),
+      window_unfocus_time: Math.floor(windowUnfocusTime),
+      tab_switches: tabSwitchCount,
+      window_switches: adjustedWindowSwitchCount,
+      created_at: new Date().toISOString(),
+    };
+  
+    console.log("Inserting stats row:", statsRow);
+  
+    const { error } = await supabase.from("focus_sessions").insert(statsRow);
+  
+    if (error) {
+      console.error("🔴 Error uploading session stats:", error.message);
+    } else {
+      console.log("✅ Session stats uploaded:", statsRow);
+      alert("Focus session ended! Stats uploaded.");
     }
-
-    // Reset the duration
+  
+    // Reset the trackers
+    setTabActiveTime(0);
+    setTabInactiveTime(0);
+    setWindowFocusTime(0);
+    setWindowUnfocusTime(0);
+    setTabSwitchCount(0);
+    setWindowSwitchCount(0);
     setElapsedTime(0);
   };
+  
 
   if (!session) {
     return <p className="p-8">Loading or redirecting...</p>;
   }
 
-  // ----------------------------------
-  // UI
-  // ----------------------------------
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center p-8">
       <h2 className="text-3xl font-semibold mb-4 text-black">
         Focus Session Page
       </h2>
-      <p className="mb-6 text-black">Stats are tracked only when session is running.</p>
+      <p className="mb-6 text-black">
+        Stats are tracked only when session is running.
+      </p>
 
-      {/* Start/Stop Buttons */}
       {!isRunning ? (
         <button
           onClick={startFocusSession}
@@ -162,39 +148,36 @@ export default function SessionPage() {
         </button>
       )}
 
-      {/* Display Current Stats */}
       <div className="space-y-2 text-black mb-6">
-        <div>Tab Active Time: {tabActiveTime}s</div>
-        <div>Tab Inactive Time: {tabInactiveTime}s</div>
-        <div>Window Focus Time: {windowFocusTime}s</div>
-        <div>Window Unfocus Time: {windowUnfocusTime}s</div>
-
-        {/* 🆕 Switch counts */}
+        <div>Tab Active Time: {tabActiveTime.toFixed(1)}s</div>
+        <div>Tab Inactive Time: {tabInactiveTime.toFixed(1)}s</div>
+        <div>Window Focus Time: {windowFocusTime.toFixed(1)}s</div>
+        <div>Window Unfocus Time: {windowUnfocusTime.toFixed(1)}s</div>
         <div>Tab Switches: {tabSwitchCount}</div>
-        <div>Window Switches: {windowSwitchCount}</div>
+        <div>Window Switches: {Math.max(windowSwitchCount - Math.floor(tabSwitchCount / 2), 0)}</div>
       </div>
 
-      {/* Live Timer UI for "elapsedTime" */}
       <div className="text-4xl font-bold text-black mb-6">
         {Math.floor(elapsedTime / 60)}:
         {String(elapsedTime % 60).padStart(2, "0")}
       </div>
 
-      {/* 
-        Render trackers with isRunning + callback props
-        so they only track while session is running
-      */}
+      {/* Pass onTabSwitch callback to TabTracker to update lastTabSwitchTime */}
       <TabTracker
         isRunning={isRunning}
         onUpdateActive={setTabActiveTime}
         onUpdateInactive={setTabInactiveTime}
-        onUpdateSwitches={setTabSwitchCount}  // 🆕 new prop
+        onUpdateSwitches={setTabSwitchCount}
+        onTabSwitch={(time) => setLastTabSwitchTime(time)}
       />
+
+      {/* Pass lastTabSwitchTime into WindowFocusTracker */}
       <WindowFocusTracker
         isRunning={isRunning}
         onUpdateFocus={setWindowFocusTime}
         onUpdateUnfocus={setWindowUnfocusTime}
-        onUpdateSwitches={setWindowSwitchCount} // 🆕 new prop
+        onUpdateSwitches={setWindowSwitchCount}
+        lastTabSwitchTime={lastTabSwitchTime}
       />
     </div>
   );

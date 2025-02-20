@@ -7,6 +7,7 @@ interface TabTrackerProps {
   onUpdateActive: React.Dispatch<React.SetStateAction<number>>;
   onUpdateInactive: React.Dispatch<React.SetStateAction<number>>;
   onUpdateSwitches: React.Dispatch<React.SetStateAction<number>>;
+  onTabSwitch?: (time: number) => void; // new prop: receives timestamp of tab switch
 }
 
 export function TabTracker({
@@ -14,99 +15,81 @@ export function TabTracker({
   onUpdateActive,
   onUpdateInactive,
   onUpdateSwitches,
+  onTabSwitch,
 }: TabTrackerProps) {
   const [isTabActive, setIsTabActive] = useState(!document.hidden);
-  const [activeTime, setActiveTime] = useState(0);
-  const [inactiveTime, setInactiveTime] = useState(0);
+  const [activeTimeMs, setActiveTimeMs] = useState(0);
+  const [inactiveTimeMs, setInactiveTimeMs] = useState(0);
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
 
-  const startTimeRef = useRef(Date.now());
+  const startTimeRef = useRef(performance.now());
   const wasTabActiveRef = useRef<boolean>(!document.hidden);
+  const switchCountRef = useRef(0);
 
-  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Start/stop 1s interval
   useEffect(() => {
     if (isRunning) {
-      startTimeRef.current = Date.now();
+      startTimeRef.current = performance.now();
       wasTabActiveRef.current = !document.hidden;
       setIsTabActive(!document.hidden);
+      measureChunk(); // Ensure no startup lag
 
-      intervalIdRef.current = setInterval(() => {
+      const interval = setInterval(() => {
         measureChunk();
-      }, 1000);
-    } else {
-      // session stops
-      measureChunk();
-      if (intervalIdRef.current) {
-        clearInterval(intervalIdRef.current);
-        intervalIdRef.current = null;
-      }
-    }
+      }, 100);
 
-    return () => {
-      if (intervalIdRef.current) {
-        clearInterval(intervalIdRef.current);
-        intervalIdRef.current = null;
-      }
-    };
+      return () => clearInterval(interval);
+    } else {
+      measureChunk();
+    }
   }, [isRunning]);
 
-  // measure leftover each second or on session end
+  // Update with fractional seconds for smoother UI updates.
   const measureChunk = () => {
-    const now = Date.now();
-    const elapsed = Math.floor((now - startTimeRef.current) / 1000);
-    if (elapsed <= 0) return;
+    const now = performance.now();
+    const elapsedMs = now - startTimeRef.current;
+    if (elapsedMs <= 0) return;
 
     if (wasTabActiveRef.current) {
-      setActiveTime((prev) => prev + elapsed);
-      setTimeout(() => onUpdateActive((p) => p + elapsed), 0);
+      setActiveTimeMs((prev) => prev + elapsedMs);
+      onUpdateActive((p) => p + elapsedMs / 1000);
     } else {
-      setInactiveTime((prev) => prev + elapsed);
-      setTimeout(() => onUpdateInactive((p) => p + elapsed), 0);
+      setInactiveTimeMs((prev) => prev + elapsedMs);
+      onUpdateInactive((p) => p + elapsedMs / 1000);
     }
-
     startTimeRef.current = now;
   };
 
-  // detect visibility changes for tab switches
   useEffect(() => {
     if (!isRunning) return;
 
     const handleVisibilityChange = () => {
-      // measure leftover for previous state
+      if (!isRunning) return;
       measureChunk();
 
-      if (!document.hidden && wasTabActiveRef.current === false) {
-        // user is going from hidden -> visible, doesn't necessarily increment tab switch
-        // up to you if you want to count this as a "switch" from inactive -> active
-      } else if (document.hidden && wasTabActiveRef.current === true) {
-        // user is going from visible -> hidden => tab switch
-        setTabSwitchCount((prev) => {
-          const newVal = prev + 1;
-          setTimeout(() => onUpdateSwitches((p) => p + 1), 0);
-          return newVal;
-        });
+      // Determine the new active state.
+      const newActiveState = !document.hidden;
+      if (newActiveState !== wasTabActiveRef.current) {
+        switchCountRef.current += 1;
+        setTabSwitchCount(switchCountRef.current);
+        onUpdateSwitches(switchCountRef.current);
+        // Notify parent of a tab switch with the current timestamp.
+        onTabSwitch && onTabSwitch(performance.now());
       }
 
-      setIsTabActive(!document.hidden);
-      wasTabActiveRef.current = !document.hidden;
-      startTimeRef.current = Date.now();
+      setIsTabActive(newActiveState);
+      wasTabActiveRef.current = newActiveState;
+      startTimeRef.current = performance.now();
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [isRunning, onUpdateSwitches]);
+  }, [isRunning, onTabSwitch, onUpdateSwitches]);
 
   return (
-    <div>
-      <h2>Tab Statistics</h2>
-      <p>Tab Active: {isTabActive ? "✅ Yes" : "❌ No"}</p>
-      <p>Total Active Time: {activeTime} sec</p>
-      <p>Total Inactive Time: {inactiveTime} sec</p>
-      <p>Tab Switches: {tabSwitchCount}</p>
+    <div className="text-black">
+      <p className="text-black">Tab Active: {isTabActive ? "✅ Yes" : "❌ No"}</p>
     </div>
   );
 }

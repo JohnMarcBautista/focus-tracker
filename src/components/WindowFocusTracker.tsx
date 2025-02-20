@@ -7,6 +7,7 @@ interface WindowFocusTrackerProps {
   onUpdateFocus: React.Dispatch<React.SetStateAction<number>>;
   onUpdateUnfocus: React.Dispatch<React.SetStateAction<number>>;
   onUpdateSwitches: React.Dispatch<React.SetStateAction<number>>;
+  lastTabSwitchTime?: number; // new prop: timestamp of last tab switch
 }
 
 export function WindowFocusTracker({
@@ -14,105 +15,90 @@ export function WindowFocusTracker({
   onUpdateFocus,
   onUpdateUnfocus,
   onUpdateSwitches,
+  lastTabSwitchTime = 0,
 }: WindowFocusTrackerProps) {
-  const [isWindowFocused, setIsWindowFocused] = useState(true);
-  const [focusTime, setFocusTime] = useState(0);
-  const [unfocusTime, setUnfocusTime] = useState(0);
+  const [isWindowFocused, setIsWindowFocused] = useState(document.hasFocus());
+  const [focusTimeMs, setFocusTimeMs] = useState(0);
+  const [unfocusTimeMs, setUnfocusTimeMs] = useState(0);
   const [windowSwitchCount, setWindowSwitchCount] = useState(0);
 
-  const startTimeRef = useRef(Date.now());
-  const wasFocusedRef = useRef<boolean>(true);
+  const startTimeRef = useRef(performance.now());
+  const wasFocusedRef = useRef<boolean>(document.hasFocus());
+  const switchCountRef = useRef(0);
 
-  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Start/stop 1s interval for real-time updates
   useEffect(() => {
     if (isRunning) {
-      startTimeRef.current = Date.now();
-      wasFocusedRef.current = true; // assume user is in focus at start
-      setIsWindowFocused(true);
-
-      intervalIdRef.current = setInterval(() => {
-        measureChunk();
-      }, 1000);
-    } else {
-      // session end
+      startTimeRef.current = performance.now();
+      wasFocusedRef.current = document.hasFocus();
+      switchCountRef.current = 0;
+      setWindowSwitchCount(0);
+      setIsWindowFocused(document.hasFocus());
       measureChunk();
-      if (intervalIdRef.current) {
-        clearInterval(intervalIdRef.current);
-        intervalIdRef.current = null;
-      }
-    }
 
-    return () => {
-      if (intervalIdRef.current) {
-        clearInterval(intervalIdRef.current);
-        intervalIdRef.current = null;
-      }
-    };
+      const interval = setInterval(() => {
+        measureChunk();
+      }, 100);
+
+      return () => clearInterval(interval);
+    } else {
+      measureChunk();
+    }
   }, [isRunning]);
 
-  // measure leftover chunk each second or on end
+  // Update with fractional seconds.
   const measureChunk = () => {
-    const now = Date.now();
-    const elapsed = Math.floor((now - startTimeRef.current) / 1000);
-    if (elapsed <= 0) return;
+    const now = performance.now();
+    const elapsedMs = now - startTimeRef.current;
+    if (elapsedMs <= 0) return;
 
     if (wasFocusedRef.current) {
-      // we were in focus
-      setFocusTime((prev) => prev + elapsed);
-      setTimeout(() => onUpdateFocus((p) => p + elapsed), 0);
+      setFocusTimeMs((prev) => prev + elapsedMs);
+      onUpdateFocus((p) => p + elapsedMs / 1000);
     } else {
-      // we were unfocused
-      setUnfocusTime((prev) => prev + elapsed);
-      setTimeout(() => onUpdateUnfocus((p) => p + elapsed), 0);
+      setUnfocusTimeMs((prev) => prev + elapsedMs);
+      onUpdateUnfocus((p) => p + elapsedMs / 1000);
     }
     startTimeRef.current = now;
   };
 
-  // handle focus/blur for window-level switches
   useEffect(() => {
     if (!isRunning) return;
 
+    const THRESHOLD_MS = 500; // time within which we consider the event a result of a tab switch
+
     const handleFocus = () => {
       if (!isRunning) return;
-      // measure leftover from the previous state
       measureChunk();
 
-      // only count a "window switch" if doc.hidden === false
-      // i.e. user didn't just switch tabs but truly came from another app
-      if (document.hidden === false && wasFocusedRef.current === false) {
-        // user is re-focusing entire window
-        setWindowSwitchCount((prev) => {
-          const newVal = prev + 1;
-          setTimeout(() => onUpdateSwitches((p) => p + 1), 0);
-          return newVal;
-        });
+      // If this focus event happens shortly after a tab switch, ignore it.
+      if (performance.now() - lastTabSwitchTime < THRESHOLD_MS) {
+        setIsWindowFocused(true);
+        wasFocusedRef.current = true;
+        startTimeRef.current = performance.now();
+        return;
       }
-
+      if (!wasFocusedRef.current && !document.hidden) {
+        switchCountRef.current += 1;
+        setWindowSwitchCount(switchCountRef.current);
+        onUpdateSwitches((prev) => prev + 1);
+      }
       setIsWindowFocused(true);
       wasFocusedRef.current = true;
-      startTimeRef.current = Date.now();
+      startTimeRef.current = performance.now();
     };
 
     const handleBlur = () => {
-      if (!isRunning) return;
       measureChunk();
-
-      // if doc.hidden is false here, it means user truly switched apps
-      // if doc.hidden is true, that means they might have switched tabs instead
-      if (document.hidden === false && wasFocusedRef.current === true) {
-        // we count an app-level switch
-        setWindowSwitchCount((prev) => {
-          const newVal = prev + 1;
-          setTimeout(() => onUpdateSwitches((p) => p + 1), 0);
-          return newVal;
-        });
-      }
-
-      setIsWindowFocused(false);
-      wasFocusedRef.current = false;
-      startTimeRef.current = Date.now();
+      setTimeout(() => {
+        // If blur happens due to a tab switch, document.hidden will be true.
+        if (document.hidden || performance.now() - lastTabSwitchTime < THRESHOLD_MS) return;
+        switchCountRef.current += 1;
+        setWindowSwitchCount(switchCountRef.current);
+        onUpdateSwitches((prev) => prev + 1);
+        setIsWindowFocused(false);
+        wasFocusedRef.current = false;
+        startTimeRef.current = performance.now();
+      }, 0);
     };
 
     window.addEventListener("focus", handleFocus);
@@ -122,16 +108,19 @@ export function WindowFocusTracker({
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [isRunning, onUpdateSwitches]);
+  }, [isRunning, lastTabSwitchTime, onUpdateSwitches]);
+
+  useEffect(() => {
+    if (isRunning) {
+      onUpdateSwitches(windowSwitchCount);
+    }
+  }, [windowSwitchCount, isRunning, onUpdateSwitches]);
 
   return (
-    <div>
-      <h2>Window Focus Statistics</h2>
-      <p>Window Focused: {isWindowFocused ? "✅ Yes" : "❌ No"}</p>
-      <p>Total Focus Time: {focusTime} sec</p>
-      <p>Total Unfocus Time: {unfocusTime} sec</p>
-      <p>Window Switches: {windowSwitchCount}</p>
+    <div className="text-black">
+      <p className="text-black">
+        Window Focused: {isWindowFocused ? "✅ Yes" : "❌ No"}
+      </p>
     </div>
   );
 }
-
