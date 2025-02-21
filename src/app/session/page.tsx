@@ -36,6 +36,12 @@ export default function SessionPage() {
   const [isTabActive, setIsTabActive] = useState(!document.hidden);
   const [isWindowFocused, setIsWindowFocused] = useState(document.hasFocus());
 
+  // New state for Task/Project Name
+  const [projectName, setProjectName] = useState("");
+
+  // New state to show visibility modal
+  const [showVisibilityModal, setShowVisibilityModal] = useState(false);
+
   useEffect(() => {
     const checkSession = async () => {
       const { data, error } = await supabase.auth.getSession();
@@ -87,16 +93,21 @@ export default function SessionPage() {
     }
   };
 
-  const stopFocusSession = async () => {
-    const finalElapsedTime = elapsedTime;
+  // When the user clicks "Stop Session," clear the timer and show the modal.
+  const stopFocusSession = () => {
     if (intervalId) {
       clearInterval(intervalId);
       setIntervalId(null);
     }
     setIsRunning(false);
     setIsPaused(false);
+    // Show the modal to ask for public/private choice.
+    setShowVisibilityModal(true);
+  };
 
-    // Adjust window switch count: subtract one window switch per two tab switches
+  // Called when the user confirms whether the session should be public.
+  const confirmStopSession = async (isPublic: boolean) => {
+    // Adjust window switch count: subtract one window switch per two tab switches.
     const adjustedWindowSwitchCount = Math.max(
       windowSwitchCount - Math.floor(tabSwitchCount / 2),
       0
@@ -104,13 +115,15 @@ export default function SessionPage() {
 
     const statsRow = {
       user_id: session?.user.id,
-      duration: Math.floor(finalElapsedTime), // Convert to integer
+      duration: Math.floor(elapsedTime), // convert to integer seconds
       tab_active_time: Math.floor(tabActiveTime),
       tab_inactive_time: Math.floor(tabInactiveTime),
       window_focus_time: Math.floor(windowFocusTime),
       window_unfocus_time: Math.floor(windowUnfocusTime),
       tab_switches: tabSwitchCount,
       window_switches: adjustedWindowSwitchCount,
+      project_name: projectName,
+      is_public: isPublic, // new field for visibility
       created_at: new Date().toISOString(),
     };
 
@@ -125,7 +138,7 @@ export default function SessionPage() {
       alert("Focus session ended! Stats uploaded.");
     }
 
-    // Reset stats
+    // Reset all stats and input fields
     setTabActiveTime(0);
     setTabInactiveTime(0);
     setWindowFocusTime(0);
@@ -133,6 +146,8 @@ export default function SessionPage() {
     setTabSwitchCount(0);
     setWindowSwitchCount(0);
     setElapsedTime(0);
+    setProjectName("");
+    setShowVisibilityModal(false);
   };
 
   if (!session) {
@@ -151,7 +166,7 @@ export default function SessionPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col justify-between p-8">
-      {/* Top Section: Header, Large Timer, and Pause/Resume/Stop Buttons */}
+      {/* Top Section: Header, Large Timer, Task/Project Input, and Control Buttons */}
       <div>
         <h2 className="text-3xl font-semibold mb-4 text-black">
           Lock In Session Page
@@ -159,6 +174,16 @@ export default function SessionPage() {
         <p className="mb-6 text-black">
           Stats are tracked only when session is running.
         </p>
+        {/* Input for Task/Project Name */}
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Enter Task/Project Name"
+            value={projectName}
+            onChange={(e) => setProjectName(e.target.value)}
+            className="p-2 border border-gray-300 rounded w-full max-w-xs text-black"
+          />
+        </div>
         {!isRunning ? (
           <button
             onClick={startFocusSession}
@@ -197,7 +222,7 @@ export default function SessionPage() {
         </div>
       </div>
 
-      {/* Bottom Section: Small Timers and Tracker Components */}
+      {/* Bottom Section: Status, Small Timers, and Tracker Components */}
       <div className="w-full">
         {/* Status row above the small timers */}
         <div className="flex justify-around mb-4 text-black">
@@ -215,7 +240,7 @@ export default function SessionPage() {
           <div>Window Switches: {displayWindowSwitches}</div>
         </div>
 
-        {/* Tracker components (tracking is active only when running and not paused) */}
+        {/* Tracker components (update state without rendering UI) */}
         <TabTracker
           isRunning={isRunning && !isPaused}
           onUpdateActive={setTabActiveTime}
@@ -233,6 +258,33 @@ export default function SessionPage() {
           onUpdateFocusState={setIsWindowFocused}
         />
       </div>
+
+      {/* Modal to select public/private visibility */}
+      {showVisibilityModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg text-black max-w-sm w-full">
+            <h3 className="text-xl font-bold mb-4">Share Your Session</h3>
+            <p className="mb-4">
+              Would you like to make your session public so others can see your stats,
+              or keep it private?
+            </p>
+            <div className="flex justify-around">
+              <button
+                onClick={() => confirmStopSession(true)}
+                className="bg-green-500 text-white px-4 py-2 rounded"
+              >
+                Public
+              </button>
+              <button
+                onClick={() => confirmStopSession(false)}
+                className="bg-gray-500 text-white px-4 py-2 rounded"
+              >
+                Private
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

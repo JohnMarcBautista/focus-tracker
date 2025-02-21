@@ -42,11 +42,13 @@ export default function TopNav() {
 
   return (
     <nav className="w-full bg-gray-900 text-white p-4 flex justify-between items-center">
-      <div className="text-xl font-bold">Focus Tracker</div>
+      <div className="text-xl font-bold">Locked In</div>
       <div className="flex space-x-4">
-        <Link href="/dashboard" className="hover:underline">Dashboard</Link>
-        <Link href="/session" className="hover:underline">Session</Link>
+      <Link href="/feed" className="hover:underline">Feed</Link>
         <Link href="/leaderboard" className="hover:underline">Leaderboard</Link>
+        <Link href="/session" className="hover:underline">Session</Link>
+        <Link href="/dashboard" className="hover:underline">Dashboard</Link>
+        
 
         {session ? (
           <button 

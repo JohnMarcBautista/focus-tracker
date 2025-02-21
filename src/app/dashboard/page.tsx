@@ -114,35 +114,21 @@ const fetchTotalFocusTime = async (user_id: string) => {
     {String(totalFocusTime % 60).padStart(2, "0")}
   </span>
 </div>
-
-        {/* ✅ Focus Timer Display */}
-        <div className="text-4xl font-bold text-black mb-6">
-          {Math.floor(elapsedTime / 60)}:{String(elapsedTime % 60).padStart(2, "0")}
-        </div>
 {/* ✅ Leaderboard page button */}
         <button onClick={() => router.push("/leaderboard")}
     className="bg-green-500 text-white px-4 py-2 rounded-lg mt-6">
     View Leaderboard
 </button>
 
-        {/* ✅ Start/Stop Timer Buttons */}
-        <div className="space-x-4">
-          {!isRunning ? (
-            <button
-              onClick={startTimer}
-              className="bg-green-500 text-white px-6 py-3 rounded-lg text-lg"
-            >
-              Start Focus Session
-            </button>
-          ) : (
-            <button
-              onClick={stopTimer}
-              className="bg-red-500 text-white px-6 py-3 rounded-lg text-lg"
-            >
-              Stop Session
-            </button>
-          )}
-        </div>
+        {/* ✅ Lock session button */}
+        <button onClick={() => router.push("/session")}
+    className="bg-green-500 text-white px-4 py-2 rounded-lg mt-6">
+    Start Lock Session
+</button>
+<button onClick={() => router.push("/feed")}
+    className="bg-green-500 text-white px-4 py-2 rounded-lg mt-6">
+    View Feed
+</button>
       </main>
     </div>
   );
