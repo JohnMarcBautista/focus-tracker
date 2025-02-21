@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
 type LeaderboardEntry = {
-    user_id: string;
+    display_name: string;
     total_time: number;
 };
 
@@ -45,18 +45,22 @@ export default function Leaderboard() {
                         </tr>
                     </thead>
                     <tbody>
-                        {leaderboard.map((user, index) => (
-                            <tr key={user.user_id} className="border-t">
-                                <td className="py-2 text-black">{index + 1}</td>
-                                <td className="py-2 text-black">{user.user_id.substring(0, 6)}...</td>
-                                <td className="py-2 text-black">
-                                    {Math.floor(user.total_time / 3600)}h{" "}
-                                    {Math.floor((user.total_time % 3600) / 60)}m{" "}
-                                    {user.total_time % 60}s
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
+  {leaderboard.map((user, index) => (
+    <tr key={user.display_name} className="border-t">
+      <td className="py-2 text-black">{index + 1}</td>
+      <td className="py-2 text-black">
+        {user.display_name.length > 12
+          ? user.display_name.substring(0, 12) + "..."
+          : user.display_name}
+      </td>
+      <td className="py-2 text-black">
+        {Math.floor(user.total_time / 3600)}h{" "}
+        {Math.floor((user.total_time % 3600) / 60)}m{" "}
+        {user.total_time % 60}s
+      </td>
+    </tr>
+  ))}
+</tbody>
                 </table>
             </div>
 

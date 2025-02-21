@@ -103,7 +103,7 @@ const fetchTotalFocusTime = async (user_id: string) => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center p-8">
         <h2 className="text-3xl font-semibold mb-4 text-black">
-          Welcome, {session?.user.email}
+          Welcome, {session?.user.user_metadata.display_name || session?.user.email}
         </h2>
 
         {/* ✅ Show Total Focus Time */}

@@ -36,7 +36,7 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="p-2 border border-gray-300 rounded"
+          className="p-2 border border-gray-300 rounded text-black"
         />
         <input
           type="password"
@@ -44,7 +44,7 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="p-2 border border-gray-300 rounded"
+          className="p-2 border border-gray-300 rounded text-black"
         />
         {error && <p className="text-red-500">{error}</p>}
         <button type="submit" className="bg-blue-500 text-white p-2 rounded">
