@@ -7,7 +7,7 @@ export default function AuthPage() {
         Check Your Email
       </h1>
       <p className="mb-6 text-white text-lg max-w-md text-center">
-        We've sent you an email with a confirmation link. Please check your inbox (and spam folder) and click the link to complete your registration.
+        We&apos;ve sent you an email with a confirmation link. Please check your inbox (and spam folder) and click the link to complete your registration.
       </p>
       <p className="text-white text-lg text-center">
         Once confirmed, you can log in and start using the app.

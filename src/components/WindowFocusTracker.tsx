@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 interface WindowFocusTrackerProps {
   isRunning: boolean;
@@ -8,7 +8,7 @@ interface WindowFocusTrackerProps {
   onUpdateUnfocus: React.Dispatch<React.SetStateAction<number>>;
   onUpdateSwitches: React.Dispatch<React.SetStateAction<number>>;
   lastTabSwitchTime?: number; // timestamp of last tab switch
-  onUpdateFocusState?: (isFocused: boolean) => void; // new callback for focus state
+  onUpdateFocusState?: (isFocused: boolean) => void; // callback for focus state
 }
 
 export function WindowFocusTracker({
@@ -19,14 +19,30 @@ export function WindowFocusTracker({
   lastTabSwitchTime = 0,
   onUpdateFocusState,
 }: WindowFocusTrackerProps) {
-  const [isWindowFocused, setIsWindowFocused] = useState(document.hasFocus());
-  const [focusTimeMs, setFocusTimeMs] = useState(0);
-  const [unfocusTimeMs, setUnfocusTimeMs] = useState(0);
+  const [, setIsWindowFocused] = useState(document.hasFocus());
+  const [, setFocusTimeMs] = useState(0);
+  const [, setUnfocusTimeMs] = useState(0);
   const [windowSwitchCount, setWindowSwitchCount] = useState(0);
 
   const startTimeRef = useRef(performance.now());
   const wasFocusedRef = useRef<boolean>(document.hasFocus());
   const switchCountRef = useRef(0);
+
+  // Memoize measureChunk so it is stable across renders.
+  const measureChunk = useCallback(() => {
+    const now = performance.now();
+    const elapsedMs = now - startTimeRef.current;
+    if (elapsedMs <= 0) return;
+
+    if (wasFocusedRef.current) {
+      setFocusTimeMs((prev) => prev + elapsedMs);
+      onUpdateFocus((p) => p + elapsedMs / 1000);
+    } else {
+      setUnfocusTimeMs((prev) => prev + elapsedMs);
+      onUpdateUnfocus((p) => p + elapsedMs / 1000);
+    }
+    startTimeRef.current = now;
+  }, [onUpdateFocus, onUpdateUnfocus]);
 
   useEffect(() => {
     if (isRunning) {
@@ -46,23 +62,7 @@ export function WindowFocusTracker({
     } else {
       measureChunk();
     }
-  }, [isRunning, onUpdateFocusState]);
-
-  // Update with fractional seconds.
-  const measureChunk = () => {
-    const now = performance.now();
-    const elapsedMs = now - startTimeRef.current;
-    if (elapsedMs <= 0) return;
-
-    if (wasFocusedRef.current) {
-      setFocusTimeMs((prev) => prev + elapsedMs);
-      onUpdateFocus((p) => p + elapsedMs / 1000);
-    } else {
-      setUnfocusTimeMs((prev) => prev + elapsedMs);
-      onUpdateUnfocus((p) => p + elapsedMs / 1000);
-    }
-    startTimeRef.current = now;
-  };
+  }, [isRunning, onUpdateFocusState, measureChunk]);
 
   useEffect(() => {
     if (!isRunning) return;
@@ -113,7 +113,7 @@ export function WindowFocusTracker({
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [isRunning, lastTabSwitchTime, onUpdateSwitches, onUpdateFocusState]);
+  }, [isRunning, lastTabSwitchTime, onUpdateSwitches, onUpdateFocusState, measureChunk]);
 
   useEffect(() => {
     if (isRunning) {
@@ -121,6 +121,5 @@ export function WindowFocusTracker({
     }
   }, [windowSwitchCount, isRunning, onUpdateSwitches]);
 
-  // Do not render internal UI.
   return null;
 }

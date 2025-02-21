@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 
 type SessionData = {
@@ -26,14 +26,14 @@ export default function FeedPage() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
-  .from("focus_sessions")
-  .select("*, user:users_view(display_name)")
-  .eq("is_public", true)
-  .order("created_at", { ascending: false })
-  .range((page - 1) * pageSize, page * pageSize - 1);
+      .from("focus_sessions")
+      .select("*, user:users_view(display_name)")
+      .eq("is_public", true)
+      .order("created_at", { ascending: false })
+      .range((page - 1) * pageSize, page * pageSize - 1);
       
     if (error) {
       console.error("Error fetching sessions:", error.message);
@@ -41,11 +41,11 @@ export default function FeedPage() {
       setSessions((prev) => [...prev, ...(data as unknown as SessionData[])]);
     }
     setLoading(false);
-  };
+  }, [page, pageSize]);
 
   useEffect(() => {
     fetchSessions();
-  }, [page]);
+  }, [fetchSessions]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">

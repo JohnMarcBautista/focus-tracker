@@ -14,7 +14,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -52,7 +52,7 @@ export default function LoginPage() {
         </button>
       </form>
       <p className="mt-4">
-        Don't have an account? <a href="/auth/register" className="text-blue-500 underline">Sign Up</a>
+        Don&apos;t have an account? <a href="/auth/register" className="text-blue-500 underline">Sign Up</a>
       </p>
     </div>
   );

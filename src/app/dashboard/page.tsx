@@ -34,54 +34,6 @@ export default function Dashboard() {
 }, [router]);
 
 
-
-
-
-
-
-
-
-  // ✅ Start Timer
-  const startTimer = () => {
-    if (!isRunning) {
-      const id = setInterval(() => {
-        setElapsedTime((prevTime) => prevTime + 1);
-      }, 1000);
-      setIntervalId(id);
-      setIsRunning(true);
-    }
-  };
-
-  const stopTimer = async () => {
-    if (isRunning && intervalId) {
-        clearInterval(intervalId);
-        setIntervalId(null);
-        setIsRunning(false);
-
-        if (!session?.user) return;
-
-        // ✅ Insert new focus session
-        await supabase
-            .from("focus_sessions")
-            .insert([{ user_id: session.user.id, duration: elapsedTime }]);
-
-        // ✅ Get total time from focus_sessions
-        const { data: totalData, error: totalError } = await supabase
-            .from("focus_sessions")
-            .select("duration")
-            .eq("user_id", session.user.id);
-
-        if (totalError) return;
-
-        const totalTime = totalData.reduce((sum, session) => sum + session.duration, 0);
-
-        setTotalFocusTime(totalTime);
-    }
-
-    setElapsedTime(0);
-};
-
-
 const fetchTotalFocusTime = async (user_id: string) => {
     if (!user_id) {
         console.error("🔴 No user ID provided.");
