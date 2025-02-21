@@ -8,9 +8,6 @@ import { useRouter } from "next/navigation";
 export default function Dashboard() {
   const [session, setSession] = useState<Session | null>(null);
   const [totalFocusTime, setTotalFocusTime] = useState<number>(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
   const router = useRouter();
 
   useEffect(() => {
