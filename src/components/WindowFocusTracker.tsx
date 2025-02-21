@@ -19,21 +19,23 @@ export function WindowFocusTracker({
   lastTabSwitchTime = 0,
   onUpdateFocusState,
 }: WindowFocusTrackerProps) {
-  // Initialize state safely without using document at module level.
-  const [, setIsWindowFocused] = useState(false);
+  // Initialize state safely without referencing document
+  const [isWindowFocused, setIsWindowFocused] = useState(false);
   const [, setFocusTimeMs] = useState(0);
   const [, setUnfocusTimeMs] = useState(0);
   const [windowSwitchCount, setWindowSwitchCount] = useState(0);
 
   const startTimeRef = useRef(performance.now());
-  const wasFocusedRef = useRef<boolean>(false);
+  const wasFocusedRef = useRef(false);
   const switchCountRef = useRef(0);
 
-  // On mount, update the initial focus state.
+  // On mount, update the initial focus state (client-side only)
   useEffect(() => {
-    const currentFocus = document.hasFocus();
-    setIsWindowFocused(currentFocus);
-    wasFocusedRef.current = currentFocus;
+    if (typeof document !== "undefined") {
+      const currentFocus = document.hasFocus();
+      setIsWindowFocused(currentFocus);
+      wasFocusedRef.current = currentFocus;
+    }
   }, []);
 
   // Memoize measureChunk so it is stable across renders.
@@ -53,27 +55,28 @@ export function WindowFocusTracker({
   }, [onUpdateFocus, onUpdateUnfocus]);
 
   useEffect(() => {
-    if (isRunning) {
-      startTimeRef.current = performance.now();
-      wasFocusedRef.current = document.hasFocus();
-      switchCountRef.current = 0;
-      setWindowSwitchCount(0);
-      setIsWindowFocused(document.hasFocus());
-      onUpdateFocusState?.(document.hasFocus());
-      measureChunk();
+    if (!isRunning) return;
+    if (typeof document === "undefined") return;
 
-      const interval = setInterval(() => {
-        measureChunk();
-      }, 100);
+    startTimeRef.current = performance.now();
+    wasFocusedRef.current = document.hasFocus();
+    switchCountRef.current = 0;
+    setWindowSwitchCount(0);
+    setIsWindowFocused(document.hasFocus());
+    onUpdateFocusState?.(document.hasFocus());
+    measureChunk();
 
-      return () => clearInterval(interval);
-    } else {
+    const interval = setInterval(() => {
       measureChunk();
-    }
+    }, 100);
+
+    return () => clearInterval(interval);
   }, [isRunning, onUpdateFocusState, measureChunk]);
 
   useEffect(() => {
     if (!isRunning) return;
+    if (typeof document === "undefined") return;
+
     const THRESHOLD_MS = 500; // adjust as needed
 
     const handleFocus = () => {
@@ -129,6 +132,5 @@ export function WindowFocusTracker({
     }
   }, [windowSwitchCount, isRunning, onUpdateSwitches]);
 
-  // Do not render internal UI.
   return null;
 }

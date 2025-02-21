@@ -29,14 +29,16 @@ export function TabTracker({
   const wasTabActiveRef = useRef(false);
   const switchCountRef = useRef(0);
 
-  // On mount, update initial state using document.
+  // On mount, update initial state (client-side only)
   useEffect(() => {
-    const currentActive = !document.hidden;
-    setIsTabActive(currentActive);
-    wasTabActiveRef.current = currentActive;
+    if (typeof document !== "undefined") {
+      const currentActive = !document.hidden;
+      setIsTabActive(currentActive);
+      wasTabActiveRef.current = currentActive;
+    }
   }, []);
 
-  // Memoize measureChunk so it's stable in dependencies.
+  // Memoize measureChunk for stable dependencies.
   const measureChunk = useCallback(() => {
     const now = performance.now();
     const elapsedMs = now - startTimeRef.current;
@@ -53,31 +55,30 @@ export function TabTracker({
   }, [onUpdateActive, onUpdateInactive]);
 
   useEffect(() => {
-    if (isRunning) {
-      startTimeRef.current = performance.now();
-      wasTabActiveRef.current = !document.hidden;
-      setIsTabActive(!document.hidden);
-      onUpdateActiveState?.(!document.hidden);
-      measureChunk(); // Ensure no startup lag
+    if (!isRunning) return;
+    if (typeof document === "undefined") return;
 
-      const interval = setInterval(() => {
-        measureChunk();
-      }, 100);
+    startTimeRef.current = performance.now();
+    wasTabActiveRef.current = !document.hidden;
+    setIsTabActive(!document.hidden);
+    onUpdateActiveState?.(!document.hidden);
+    measureChunk();
 
-      return () => clearInterval(interval);
-    } else {
+    const interval = setInterval(() => {
       measureChunk();
-    }
+    }, 100);
+
+    return () => clearInterval(interval);
   }, [isRunning, onUpdateActiveState, measureChunk]);
 
   useEffect(() => {
     if (!isRunning) return;
+    if (typeof document === "undefined") return;
 
     const handleVisibilityChange = () => {
       if (!isRunning) return;
       measureChunk();
 
-      // Determine the new active state.
       const newActiveState = !document.hidden;
       if (newActiveState !== wasTabActiveRef.current) {
         switchCountRef.current += 1;
