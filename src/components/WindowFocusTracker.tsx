@@ -20,7 +20,7 @@ export function WindowFocusTracker({
   onUpdateFocusState,
 }: WindowFocusTrackerProps) {
   // Initialize state safely without referencing document
-  const [isWindowFocused, setIsWindowFocused] = useState(false);
+  const [, setIsWindowFocused] = useState(false);
   const [, setFocusTimeMs] = useState(0);
   const [, setUnfocusTimeMs] = useState(0);
   const [windowSwitchCount, setWindowSwitchCount] = useState(0);
