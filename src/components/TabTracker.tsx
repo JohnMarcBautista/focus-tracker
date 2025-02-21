@@ -19,27 +19,35 @@ export function TabTracker({
   onTabSwitch,
   onUpdateActiveState,
 }: TabTrackerProps) {
-  // We no longer render UI from this component, so we use these setters only.
-  const [, setIsTabActive] = useState(!document.hidden);
+  // Initialize with safe defaults.
+  const [, setIsTabActive] = useState(false);
   const [, setActiveTimeMs] = useState(0);
   const [, setInactiveTimeMs] = useState(0);
   const [, setTabSwitchCount] = useState(0);
 
   const startTimeRef = useRef(performance.now());
-  const wasTabActiveRef = useRef<boolean>(!document.hidden);
+  const wasTabActiveRef = useRef(false);
   const switchCountRef = useRef(0);
 
-  // Memoize measureChunk so we can add it to dependencies
+  // On mount, update initial state using document.
+  useEffect(() => {
+    const currentActive = !document.hidden;
+    setIsTabActive(currentActive);
+    wasTabActiveRef.current = currentActive;
+  }, []);
+
+  // Memoize measureChunk so it's stable in dependencies.
   const measureChunk = useCallback(() => {
     const now = performance.now();
     const elapsedMs = now - startTimeRef.current;
     if (elapsedMs <= 0) return;
+
     if (wasTabActiveRef.current) {
       setActiveTimeMs((prev) => prev + elapsedMs);
-      onUpdateActive((p) => p + elapsedMs / 1000);
+      onUpdateActive((prev) => prev + elapsedMs / 1000);
     } else {
       setInactiveTimeMs((prev) => prev + elapsedMs);
-      onUpdateInactive((p) => p + elapsedMs / 1000);
+      onUpdateInactive((prev) => prev + elapsedMs / 1000);
     }
     startTimeRef.current = now;
   }, [onUpdateActive, onUpdateInactive]);

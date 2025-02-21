@@ -19,14 +19,22 @@ export function WindowFocusTracker({
   lastTabSwitchTime = 0,
   onUpdateFocusState,
 }: WindowFocusTrackerProps) {
-  const [, setIsWindowFocused] = useState(document.hasFocus());
+  // Initialize state safely without using document at module level.
+  const [isWindowFocused, setIsWindowFocused] = useState(false);
   const [, setFocusTimeMs] = useState(0);
   const [, setUnfocusTimeMs] = useState(0);
   const [windowSwitchCount, setWindowSwitchCount] = useState(0);
 
   const startTimeRef = useRef(performance.now());
-  const wasFocusedRef = useRef<boolean>(document.hasFocus());
+  const wasFocusedRef = useRef<boolean>(false);
   const switchCountRef = useRef(0);
+
+  // On mount, update the initial focus state.
+  useEffect(() => {
+    const currentFocus = document.hasFocus();
+    setIsWindowFocused(currentFocus);
+    wasFocusedRef.current = currentFocus;
+  }, []);
 
   // Memoize measureChunk so it is stable across renders.
   const measureChunk = useCallback(() => {
@@ -121,5 +129,6 @@ export function WindowFocusTracker({
     }
   }, [windowSwitchCount, isRunning, onUpdateSwitches]);
 
+  // Do not render internal UI.
   return null;
 }
