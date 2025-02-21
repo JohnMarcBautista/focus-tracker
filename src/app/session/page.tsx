@@ -33,9 +33,15 @@ export default function SessionPage() {
   // Last tab switch timestamp
   const [lastTabSwitchTime, setLastTabSwitchTime] = useState(0);
 
-  // Lifted status state for display
-  const [isTabActive, setIsTabActive] = useState(!document.hidden);
-  const [isWindowFocused, setIsWindowFocused] = useState(document.hasFocus());
+  // Lifted status state for display: initialize safely.
+  const [isTabActive, setIsTabActive] = useState(false);
+  const [isWindowFocused, setIsWindowFocused] = useState(false);
+
+  // On client mount, update the status from document.
+  useEffect(() => {
+    setIsTabActive(!document.hidden);
+    setIsWindowFocused(document.hasFocus());
+  }, []);
 
   // New state for Task/Project Name
   const [projectName, setProjectName] = useState("");
