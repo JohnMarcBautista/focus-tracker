@@ -68,7 +68,6 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setIsPaused(false);
     setIsRunning(true);
 
-    // Reset accumulated time and mark the start of a new active period.
     accumulatedTimeRef.current = 0;
     startTimeRef.current = Date.now();
 
@@ -76,21 +75,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       intervalRef.current = setInterval(() => {
         if (startTimeRef.current !== null) {
           const now = Date.now();
-          // Calculate elapsed time as the sum of previous active periods and the current one.
           setElapsedTime(accumulatedTimeRef.current + (now - startTimeRef.current) / 1000);
         }
       }, 100);
     }
   };
 
+  // Updated pauseSession: simply freeze elapsedTime.
   const pauseSession = () => {
     setIsPaused(true);
-    if (startTimeRef.current !== null) {
-      const now = Date.now();
-      // Add the active period to the accumulated time.
-      accumulatedTimeRef.current += now - startTimeRef.current;
-      startTimeRef.current = null;
-    }
+    // Freeze the current elapsed time without adding extra time.
+    accumulatedTimeRef.current = elapsedTime;
+    startTimeRef.current = null;
+
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -99,7 +96,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const resumeSession = () => {
     setIsPaused(false);
-    // Mark the start time of the resumed active period.
+    // Resume from the frozen elapsed time.
     startTimeRef.current = Date.now();
     if (!intervalRef.current) {
       intervalRef.current = setInterval(() => {
