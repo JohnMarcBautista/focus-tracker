@@ -49,9 +49,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [lastTabSwitchTime, setLastTabSwitchTime] = useState(0);
   const [, setIsTabActive] = useState(false);
   const [, setIsWindowFocused] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null); // new state for user ID
+  const [userId, setUserId] = useState<string | null>(null);
 
+  // Refs for timestamp-based elapsed time tracking.
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number | null>(null);
+  const accumulatedTimeRef = useRef<number>(0);
 
   const startSession = () => {
     // Reset all stats
@@ -65,15 +68,29 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     setIsPaused(false);
     setIsRunning(true);
 
+    // Reset accumulated time and mark the start of a new active period.
+    accumulatedTimeRef.current = 0;
+    startTimeRef.current = Date.now();
+
     if (!intervalRef.current) {
       intervalRef.current = setInterval(() => {
-        setElapsedTime((prev) => prev + 0.1);
+        if (startTimeRef.current !== null) {
+          const now = Date.now();
+          // Calculate elapsed time as the sum of previous active periods and the current one.
+          setElapsedTime(accumulatedTimeRef.current + (now - startTimeRef.current) / 1000);
+        }
       }, 100);
     }
   };
 
   const pauseSession = () => {
     setIsPaused(true);
+    if (startTimeRef.current !== null) {
+      const now = Date.now();
+      // Add the active period to the accumulated time.
+      accumulatedTimeRef.current += now - startTimeRef.current;
+      startTimeRef.current = null;
+    }
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -82,9 +99,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const resumeSession = () => {
     setIsPaused(false);
+    // Mark the start time of the resumed active period.
+    startTimeRef.current = Date.now();
     if (!intervalRef.current) {
       intervalRef.current = setInterval(() => {
-        setElapsedTime((prev) => prev + 0.1);
+        if (startTimeRef.current !== null) {
+          const now = Date.now();
+          setElapsedTime(accumulatedTimeRef.current + (now - startTimeRef.current) / 1000);
+        }
       }, 100);
     }
   };
@@ -148,13 +170,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     windowSwitchCount,
     projectName,
     lastTabSwitchTime,
-    userId, // new
+    userId,
     startSession,
     pauseSession,
     resumeSession,
     stopSession,
     setProjectName,
-    setUserId, // new
+    setUserId,
     setTabActiveTime,
     setTabInactiveTime,
     setWindowFocusTime,
