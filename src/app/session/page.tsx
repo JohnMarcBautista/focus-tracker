@@ -41,7 +41,6 @@ export default function SessionPage() {
     setLastTabSwitchTime,
     setIsTabActive,
     setIsWindowFocused,
-    // Also get setUserId from the context.
     setUserId,
   } = useSession();
 
@@ -53,14 +52,13 @@ export default function SessionPage() {
         return;
       }
       setAuthSession(data.session);
-      // Save the authenticated user's ID in the global session context.
       setUserId(data.session.user.id);
     };
     checkSession();
   }, [router, setUserId]);
 
   if (!authSession) {
-    return <p className="p-8">Loading or redirecting...</p>;
+    return <p className="p-8 text-center text-xl">Loading or redirecting...</p>;
   }
 
   // Format elapsedTime into minutes and seconds (with one decimal)
@@ -74,86 +72,105 @@ export default function SessionPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-between p-8">
-      {/* Top Section: Header, Timer, Task/Project Input, and Control Buttons */}
-      <div>
-        <h2 className="text-3xl font-semibold mb-4 text-black">
-          Lock In Session Page
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-indigo-800 flex flex-col justify-between p-8 text-white">
+      {/* Top Section */}
+      <div className="max-w-3xl mx-auto text-center">
+        <h2 className="text-4xl md:text-5xl font-extrabold mb-4 drop-shadow-lg">
+          Lock In Session
         </h2>
-        <p className="mb-6 text-black">
-          Stats are tracked only when session is running.
+        <p className="text-lg md:text-xl mb-8">
+          Your focus timer is live. Stats are tracked only when your session is running.
         </p>
-        {/* Input for Task/Project Name */}
-        <div className="mb-4">
+        {/* Project Input */}
+        <div className="mb-8 flex justify-center">
           <input
             type="text"
             placeholder="Enter Task/Project Name"
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
-            className="p-2 border border-gray-300 rounded w-full max-w-xs text-black"
+            className="w-full max-w-md p-3 rounded-lg border border-gray-300 text-black shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
-        {!isRunning ? (
-          <button
-            onClick={startSession}
-            className="bg-green-500 text-white px-6 py-3 rounded-lg text-lg mb-6"
-          >
-            Lock In
-          </button>
-        ) : (
-          <div className="mb-6">
-            {!isPaused ? (
-              <button
-                onClick={pauseSession}
-                className="bg-yellow-500 text-white px-6 py-3 rounded-lg text-lg mr-4"
-              >
-                Pause Session
-              </button>
-            ) : (
-              <button
-                onClick={resumeSession}
-                className="bg-blue-500 text-white px-6 py-3 rounded-lg text-lg mr-4"
-              >
-                Resume Session
-              </button>
-            )}
-            {/* When stopping the session, pause it first and show the modal */}
+        {/* Control Buttons */}
+        <div className="mb-8 flex flex-wrap justify-center gap-4">
+          {!isRunning ? (
             <button
-              onClick={() => {
-                pauseSession();
-                setShowVisibilityModal(true);
-              }}
-              className="bg-red-500 text-white px-6 py-3 rounded-lg text-lg"
+              onClick={startSession}
+              className="bg-green-500 hover:bg-green-600 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
             >
-              Stop Session
+              Lock In
             </button>
-          </div>
-        )}
-
-        <div className="text-4xl font-bold text-black mb-6">
+          ) : (
+            <>
+              {!isPaused ? (
+                <button
+                  onClick={pauseSession}
+                  className="bg-yellow-500 hover:bg-yellow-600 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
+                >
+                  Pause
+                </button>
+              ) : (
+                <button
+                  onClick={resumeSession}
+                  className="bg-blue-500 hover:bg-blue-600 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
+                >
+                  Resume
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  pauseSession();
+                  setShowVisibilityModal(true);
+                }}
+                className="bg-red-500 hover:bg-red-600 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
+              >
+                Stop Session
+              </button>
+            </>
+          )}
+        </div>
+        {/* Timer Display */}
+        <div className="text-6xl md:text-7xl font-bold tracking-wider drop-shadow-2xl mb-8">
           {minutes}:{seconds}
         </div>
       </div>
 
-      {/* Bottom Section: Status, Detailed Stats, and Tracker Components */}
-      <div className="w-full">
-        {/* Status row */}
-        <div className="flex justify-around mb-4 text-black">
-          <p>Tab Active: {"✅"}</p>
-          <p>Window Focused: {"✅"}</p>
+      {/* Bottom Section: Stats & Tracker Components */}
+      <div className="max-w-4xl mx-auto">
+        {/* Status Row */}
+        <div className="flex justify-around mb-8 text-lg">
+          <p>Tab Active: <span className="font-semibold">✅</span></p>
+          <p>Window Focused: <span className="font-semibold">✅</span></p>
+        </div>
+        {/* Detailed Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-indigo-700 bg-opacity-50 p-4 rounded-lg shadow-md">
+            <p className="text-sm uppercase">Tab Active Time</p>
+            <p className="text-2xl font-bold">{tabActiveTime.toFixed(1)}s</p>
+          </div>
+          <div className="bg-indigo-700 bg-opacity-50 p-4 rounded-lg shadow-md">
+            <p className="text-sm uppercase">Tab Inactive Time</p>
+            <p className="text-2xl font-bold">{tabInactiveTime.toFixed(1)}s</p>
+          </div>
+          <div className="bg-indigo-700 bg-opacity-50 p-4 rounded-lg shadow-md">
+            <p className="text-sm uppercase">Window Focus Time</p>
+            <p className="text-2xl font-bold">{windowFocusTime.toFixed(1)}s</p>
+          </div>
+          <div className="bg-indigo-700 bg-opacity-50 p-4 rounded-lg shadow-md">
+            <p className="text-sm uppercase">Window Unfocus Time</p>
+            <p className="text-2xl font-bold">{windowUnfocusTime.toFixed(1)}s</p>
+          </div>
+          <div className="bg-indigo-700 bg-opacity-50 p-4 rounded-lg shadow-md">
+            <p className="text-sm uppercase">Tab Switches</p>
+            <p className="text-2xl font-bold">{tabSwitchCount}</p>
+          </div>
+          <div className="bg-indigo-700 bg-opacity-50 p-4 rounded-lg shadow-md">
+            <p className="text-sm uppercase">Window Switches</p>
+            <p className="text-2xl font-bold">{displayWindowSwitches}</p>
+          </div>
         </div>
 
-        {/* Detailed stats grid */}
-        <div className="grid grid-cols-2 gap-4 text-black mb-6">
-          <div>Tab Active Time: {tabActiveTime.toFixed(1)}s</div>
-          <div>Tab Inactive Time: {tabInactiveTime.toFixed(1)}s</div>
-          <div>Window Focus Time: {windowFocusTime.toFixed(1)}s</div>
-          <div>Window Unfocus Time: {windowUnfocusTime.toFixed(1)}s</div>
-          <div>Tab Switches: {tabSwitchCount}</div>
-          <div>Window Switches: {displayWindowSwitches}</div>
-        </div>
-
-        {/* Render Tracker Components */}
+        {/* Tracker Components */}
         <TabTracker
           isRunning={isRunning && !isPaused}
           onUpdateActive={setTabActiveTime}
@@ -172,21 +189,21 @@ export default function SessionPage() {
         />
       </div>
 
-      {/* Modal to select public/private visibility with Cancel option */}
+      {/* Modal for Session Visibility */}
       {showVisibilityModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg text-black max-w-sm w-full">
-            <h3 className="text-xl font-bold mb-4">Share Your Session</h3>
-            <p className="mb-4">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70">
+          <div className="bg-white p-8 rounded-xl shadow-2xl text-black w-full max-w-sm">
+            <h3 className="text-2xl font-bold mb-4">Share Your Session</h3>
+            <p className="mb-6">
               Would you like to make your session public so others can see your stats, or keep it private?
             </p>
-            <div className="flex justify-around">
+            <div className="flex justify-between">
               <button
                 onClick={() => {
                   stopSession(true);
                   setShowVisibilityModal(false);
                 }}
-                className="bg-green-500 text-white px-4 py-2 rounded"
+                className="bg-green-500 hover:bg-green-600 transition-colors px-4 py-2 rounded"
               >
                 Public
               </button>
@@ -195,7 +212,7 @@ export default function SessionPage() {
                   stopSession(false);
                   setShowVisibilityModal(false);
                 }}
-                className="bg-gray-500 text-white px-4 py-2 rounded"
+                className="bg-gray-500 hover:bg-gray-600 transition-colors px-4 py-2 rounded"
               >
                 Private
               </button>
@@ -204,7 +221,7 @@ export default function SessionPage() {
                   resumeSession();
                   setShowVisibilityModal(false);
                 }}
-                className="bg-blue-500 text-white px-4 py-2 rounded"
+                className="bg-blue-500 hover:bg-blue-600 transition-colors px-4 py-2 rounded"
               >
                 Cancel
               </button>
