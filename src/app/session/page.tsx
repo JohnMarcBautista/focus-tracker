@@ -72,7 +72,7 @@ export default function SessionPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-indigo-800 flex flex-col justify-between p-8 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex flex-col justify-between p-8 text-white bg-[url('/stars-bg.jpg')] bg-cover bg-center">
       {/* Top Section */}
       <div className="max-w-3xl mx-auto text-center">
         <h2 className="text-4xl md:text-5xl font-extrabold mb-4 drop-shadow-lg">
@@ -88,7 +88,7 @@ export default function SessionPage() {
             placeholder="Enter Task/Project Name"
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
-            className="w-full max-w-md p-3 rounded-lg border border-gray-300 text-black shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full max-w-md p-3 rounded-lg border border-gray-700 text-black shadow-md focus:outline-none focus:ring-2 focus:ring-gray-600"
           />
         </div>
         {/* Control Buttons */}
@@ -96,7 +96,7 @@ export default function SessionPage() {
           {!isRunning ? (
             <button
               onClick={startSession}
-              className="bg-green-500 hover:bg-green-600 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
+              className="bg-green-600 hover:bg-green-700 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
             >
               Lock In
             </button>
@@ -105,14 +105,14 @@ export default function SessionPage() {
               {!isPaused ? (
                 <button
                   onClick={pauseSession}
-                  className="bg-yellow-500 hover:bg-yellow-600 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
+                  className="bg-yellow-600 hover:bg-yellow-700 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
                 >
                   Pause
                 </button>
               ) : (
                 <button
                   onClick={resumeSession}
-                  className="bg-blue-500 hover:bg-blue-600 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
+                  className="bg-blue-600 hover:bg-blue-700 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
                 >
                   Resume
                 </button>
@@ -122,7 +122,7 @@ export default function SessionPage() {
                   pauseSession();
                   setShowVisibilityModal(true);
                 }}
-                className="bg-red-500 hover:bg-red-600 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
+                className="bg-red-600 hover:bg-red-700 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
               >
                 Stop Session
               </button>
@@ -144,27 +144,27 @@ export default function SessionPage() {
         </div>
         {/* Detailed Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-indigo-700 bg-opacity-50 p-4 rounded-lg shadow-md">
+          <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
             <p className="text-sm uppercase">Tab Active Time</p>
             <p className="text-2xl font-bold">{tabActiveTime.toFixed(1)}s</p>
           </div>
-          <div className="bg-indigo-700 bg-opacity-50 p-4 rounded-lg shadow-md">
+          <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
             <p className="text-sm uppercase">Tab Inactive Time</p>
             <p className="text-2xl font-bold">{tabInactiveTime.toFixed(1)}s</p>
           </div>
-          <div className="bg-indigo-700 bg-opacity-50 p-4 rounded-lg shadow-md">
+          <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
             <p className="text-sm uppercase">Window Focus Time</p>
             <p className="text-2xl font-bold">{windowFocusTime.toFixed(1)}s</p>
           </div>
-          <div className="bg-indigo-700 bg-opacity-50 p-4 rounded-lg shadow-md">
+          <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
             <p className="text-sm uppercase">Window Unfocus Time</p>
             <p className="text-2xl font-bold">{windowUnfocusTime.toFixed(1)}s</p>
           </div>
-          <div className="bg-indigo-700 bg-opacity-50 p-4 rounded-lg shadow-md">
+          <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
             <p className="text-sm uppercase">Tab Switches</p>
             <p className="text-2xl font-bold">{tabSwitchCount}</p>
           </div>
-          <div className="bg-indigo-700 bg-opacity-50 p-4 rounded-lg shadow-md">
+          <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
             <p className="text-sm uppercase">Window Switches</p>
             <p className="text-2xl font-bold">{displayWindowSwitches}</p>
           </div>
@@ -191,8 +191,8 @@ export default function SessionPage() {
 
       {/* Modal for Session Visibility */}
       {showVisibilityModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70">
-          <div className="bg-white p-8 rounded-xl shadow-2xl text-black w-full max-w-sm">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80">
+          <div className="bg-gray-900 p-8 rounded-xl shadow-2xl text-white w-full max-w-sm">
             <h3 className="text-2xl font-bold mb-4">Share Your Session</h3>
             <p className="mb-6">
               Would you like to make your session public so others can see your stats, or keep it private?
@@ -203,7 +203,7 @@ export default function SessionPage() {
                   stopSession(true);
                   setShowVisibilityModal(false);
                 }}
-                className="bg-green-500 hover:bg-green-600 transition-colors px-4 py-2 rounded"
+                className="bg-green-600 hover:bg-green-700 transition-colors px-4 py-2 rounded"
               >
                 Public
               </button>
@@ -212,7 +212,7 @@ export default function SessionPage() {
                   stopSession(false);
                   setShowVisibilityModal(false);
                 }}
-                className="bg-gray-500 hover:bg-gray-600 transition-colors px-4 py-2 rounded"
+                className="bg-gray-600 hover:bg-gray-700 transition-colors px-4 py-2 rounded"
               >
                 Private
               </button>
@@ -221,7 +221,7 @@ export default function SessionPage() {
                   resumeSession();
                   setShowVisibilityModal(false);
                 }}
-                className="bg-blue-500 hover:bg-blue-600 transition-colors px-4 py-2 rounded"
+                className="bg-blue-600 hover:bg-blue-700 transition-colors px-4 py-2 rounded"
               >
                 Cancel
               </button>
