@@ -47,8 +47,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [windowSwitchCount, setWindowSwitchCount] = useState(0);
   const [projectName, setProjectName] = useState("");
   const [lastTabSwitchTime, setLastTabSwitchTime] = useState(0);
-  const [isTabActive, setIsTabActive] = useState(false);
-  const [isWindowFocused, setIsWindowFocused] = useState(false);
+  const [, setIsTabActive] = useState(false);
+  const [, setIsWindowFocused] = useState(false);
   const [userId, setUserId] = useState<string | null>(null); // new state for user ID
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
