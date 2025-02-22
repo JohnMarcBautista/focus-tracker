@@ -22,21 +22,23 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
     } else {
-      router.replace("/dashboard"); // ✅ Redirects after successful login
+      router.replace("/dashboard");
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Login to Focus Tracker</h1>
-      <form onSubmit={handleLogin} className="flex flex-col gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex flex-col items-center justify-center p-8 text-white bg-[url('/stars-bg.jpg')] bg-cover bg-center">
+      <h1 className="text-4xl md:text-5xl font-extrabold mb-8 drop-shadow-lg">
+        Login to Focus Tracker
+      </h1>
+      <form onSubmit={handleLogin} className="flex flex-col gap-4 w-full max-w-md">
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="p-2 border border-gray-300 rounded text-black"
+          className="p-3 rounded-lg border border-gray-700 text-black shadow-md focus:outline-none focus:ring-2 focus:ring-gray-600"
         />
         <input
           type="password"
@@ -44,15 +46,18 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="p-2 border border-gray-300 rounded text-black"
+          className="p-3 rounded-lg border border-gray-700 text-black shadow-md focus:outline-none focus:ring-2 focus:ring-gray-600"
         />
-        {error && <p className="text-red-500">{error}</p>}
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded">
+        {error && <p className="text-red-500 text-center">{error}</p>}
+        <button type="submit" className="bg-blue-600 hover:bg-blue-700 transition-colors px-8 py-3 rounded-full text-xl shadow-xl">
           Login
         </button>
       </form>
-      <p className="mt-4">
-        Don&apos;t have an account? <a href="/auth/register" className="text-blue-500 underline">Sign Up</a>
+      <p className="mt-6 text-center">
+        Don&apos;t have an account?{" "}
+        <a href="/auth/register" className="text-blue-500 underline">
+          Sign Up
+        </a>
       </p>
     </div>
   );

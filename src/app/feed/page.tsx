@@ -71,7 +71,7 @@ export default function FeedPage() {
               <p className="text-5xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
                 {Math.floor(session.duration / 3600)}h{" "}
                 {Math.floor((session.duration % 3600) / 60)}m{" "}
-                {session.duration % 60}s
+                {session.duration % 60}
               </p>
               <p className="mt-2 text-sm uppercase tracking-wider text-gray-400">Duration</p>
             </div>
