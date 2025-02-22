@@ -7,7 +7,7 @@ export default function Home() {
         Welcome to Locked In
       </h1>
       <p className="text-xl md:text-2xl mb-12 text-gray-300">
-        Join The World's #1 Social Focus Keeper Platform
+        Join The World&apos;s #1 Social Focus Keeper Platform
       </p>
       <Link href="/auth/login">
         <button className="bg-blue-600 hover:bg-blue-700 transition-all px-10 py-4 rounded-full text-2xl shadow-xl transform hover:scale-105 active:animate-ping">
