@@ -16,7 +16,6 @@ type SessionData = {
   project_name: string;
   is_public: boolean;
   created_at: string;
-  // Joined user data – note: using alias "user"
   user: { display_name: string } | null;
 };
 
@@ -48,16 +47,18 @@ export default function FeedPage() {
   }, [fetchSessions]);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <h1 className="text-3xl font-bold mb-6 text-black">Focus Sessions Feed</h1>
-      <div className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-8 text-white bg-[url('/stars-bg.jpg')] bg-cover bg-center">
+      <h1 className="text-4xl md:text-5xl font-bold mb-10 text-center drop-shadow-lg">
+        Focus Sessions Feed
+      </h1>
+      <div className="space-y-12">
         {sessions.map((session) => (
-          <div key={session.id} className="bg-white p-6 rounded-lg shadow">
-            <div className="mb-2">
-              <h2 className="text-xl font-semibold text-black">
+          <div key={session.id} className="bg-gray-800 bg-opacity-90 p-8 rounded-2xl shadow-2xl transform hover:-translate-y-1 transition-all">
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold">
                 {session.project_name || "Untitled Session"}
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-400">
                 Posted by{" "}
                 {session.user && session.user.display_name
                   ? session.user.display_name
@@ -65,14 +66,16 @@ export default function FeedPage() {
                 on {new Date(session.created_at).toLocaleString()}
               </p>
             </div>
-            <div className="mb-4">
-              <p className="text-lg text-black">
-                Duration: {Math.floor(session.duration / 3600)}h{" "}
+            <div className="mb-8">
+              {/* Emphasized Duration */}
+              <p className="text-5xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+                {Math.floor(session.duration / 3600)}h{" "}
                 {Math.floor((session.duration % 3600) / 60)}m{" "}
                 {session.duration % 60}s
               </p>
+              <p className="mt-2 text-sm uppercase tracking-wider text-gray-400">Duration</p>
             </div>
-            <div className="text-sm text-gray-700 grid grid-cols-2 gap-2">
+            <div className="text-sm grid grid-cols-2 gap-4 text-gray-300">
               <p>Tab Active: {session.tab_active_time.toFixed(1)}s</p>
               <p>Tab Inactive: {session.tab_inactive_time.toFixed(1)}s</p>
               <p>Window Focus: {session.window_focus_time.toFixed(1)}s</p>
@@ -83,13 +86,13 @@ export default function FeedPage() {
           </div>
         ))}
       </div>
-      <div className="mt-6 flex justify-center">
+      <div className="mt-12 flex justify-center">
         {loading ? (
-          <p className="text-black">Loading...</p>
+          <p>Loading...</p>
         ) : (
           <button
             onClick={() => setPage((prev) => prev + 1)}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            className="bg-blue-600 hover:bg-blue-700 transition-colors px-8 py-4 rounded-full text-xl shadow-xl"
           >
             Load More
           </button>
