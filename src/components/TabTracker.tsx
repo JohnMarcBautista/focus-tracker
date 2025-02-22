@@ -101,5 +101,13 @@ export function TabTracker({
     };
   }, [isRunning, onTabSwitch, onUpdateSwitches, onUpdateActiveState, measureChunk]);
 
+  // Reset internal tab switch count when session stops.
+  useEffect(() => {
+    if (!isRunning) {
+      switchCountRef.current = 0;
+      setTabSwitchCount(0);
+    }
+  }, [isRunning]);
+
   return null;
 }

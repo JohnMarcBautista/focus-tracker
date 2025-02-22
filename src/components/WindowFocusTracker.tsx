@@ -23,10 +23,11 @@ export function WindowFocusTracker({
   const [, setIsWindowFocused] = useState(false);
   const [, setFocusTimeMs] = useState(0);
   const [, setUnfocusTimeMs] = useState(0);
-  const [windowSwitchCount, setWindowSwitchCount] = useState(0);
+  // Removed local windowSwitchCount state.
 
   const startTimeRef = useRef(performance.now());
   const wasFocusedRef = useRef(false);
+  // We'll keep a ref to detect consecutive switch events, but no local state.
   const switchCountRef = useRef(0);
 
   // On mount, update the initial focus state (client-side only)
@@ -60,8 +61,6 @@ export function WindowFocusTracker({
 
     startTimeRef.current = performance.now();
     wasFocusedRef.current = document.hasFocus();
-    switchCountRef.current = 0;
-    setWindowSwitchCount(0);
     setIsWindowFocused(document.hasFocus());
     onUpdateFocusState?.(document.hasFocus());
     measureChunk();
@@ -93,7 +92,6 @@ export function WindowFocusTracker({
       }
       if (!wasFocusedRef.current && !document.hidden) {
         switchCountRef.current += 1;
-        setWindowSwitchCount(switchCountRef.current);
         onUpdateSwitches((prev) => prev + 1);
       }
       setIsWindowFocused(true);
@@ -108,7 +106,6 @@ export function WindowFocusTracker({
         if (document.hidden || performance.now() - lastTabSwitchTime < THRESHOLD_MS)
           return;
         switchCountRef.current += 1;
-        setWindowSwitchCount(switchCountRef.current);
         onUpdateSwitches((prev) => prev + 1);
         setIsWindowFocused(false);
         onUpdateFocusState?.(false);
@@ -126,11 +123,7 @@ export function WindowFocusTracker({
     };
   }, [isRunning, lastTabSwitchTime, onUpdateSwitches, onUpdateFocusState, measureChunk]);
 
-  useEffect(() => {
-    if (isRunning) {
-      onUpdateSwitches(windowSwitchCount);
-    }
-  }, [windowSwitchCount, isRunning, onUpdateSwitches]);
+  // Removed effects that were resetting or syncing local windowSwitchCount.
 
   return null;
 }

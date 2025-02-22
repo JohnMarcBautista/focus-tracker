@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import ClientTopNav from "@/components/ClientTopNav"; // ✅ Use ClientTopNav instead of TopNav
+import ClientTopNav from "@/components/ClientTopNav";
+import { SessionProvider } from "@/contexts/SessionContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,14 +21,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ClientTopNav /> {/* ✅ Now conditionally renders TopNav */}
-        <main>{children}</main>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <ClientTopNav />
+        <SessionProvider>
+          <main>{children}</main>
+        </SessionProvider>
       </body>
     </html>
   );
