@@ -19,36 +19,38 @@ export default function RegisterPage() {
       email,
       password,
       options: {
-        data: { display_name: displayName }  // Store the display name in user metadata
-      }
+        data: { display_name: displayName },
+      },
     });
 
     if (error) {
       setError(error.message);
     } else {
-      router.push("/auth"); // Redirect after successful registration
+      router.push("/auth");
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Register</h1>
-      <form onSubmit={handleRegister} className="flex flex-col gap-4">
-        <input
-          type="text"
-          placeholder="Username / Display Name"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          required
-          className="p-2 border border-gray-300 rounded text-black"
-        />
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex flex-col items-center justify-center p-8 text-white bg-[url('/stars-bg.jpg')] bg-cover bg-center">
+      <h1 className="text-4xl md:text-5xl font-extrabold mb-8 drop-shadow-2xl">
+        Register to Alter your Future
+      </h1>
+      <form onSubmit={handleRegister} className="flex flex-col gap-6 w-full max-w-md">
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="p-2 border border-gray-300 rounded text-black"
+          className="p-3 rounded-lg border border-gray-700 text-black shadow-md focus:outline-none focus:ring-2 focus:ring-gray-600"
+        />
+        <input
+          type="text"
+          placeholder="Username / Display Name"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          required
+          className="p-3 rounded-lg border border-gray-700 text-black shadow-md focus:outline-none focus:ring-2 focus:ring-gray-600"
         />
         <input
           type="password"
@@ -56,16 +58,22 @@ export default function RegisterPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="p-2 border border-gray-300 rounded text-black"
+          className="p-3 rounded-lg border border-gray-700 text-black shadow-md focus:outline-none focus:ring-2 focus:ring-gray-600"
         />
-        {error && <p className="text-red-500">{error}</p>}
-        <button type="submit" className="bg-green-500 text-white p-2 rounded">
+        {error && <p className="text-red-500 text-center">{error}</p>}
+        <button
+          type="submit"
+          className="bg-green-600 hover:bg-green-700 transition-colors px-8 py-4 rounded-full text-xl shadow-xl"
+        >
           Sign Up
         </button>
       </form>
-      <p className="mt-4">
+      <p className="mt-6 text-center text-lg">
         Already have an account?{" "}
-        <a href="/auth/login" className="text-blue-500 underline">
+        <a
+          href="/auth/login"
+          className="text-blue-500 underline hover:text-blue-400 transition-colors"
+        >
           Log in
         </a>
       </p>

@@ -29,7 +29,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex flex-col items-center justify-center p-8 text-white bg-[url('/stars-bg.jpg')] bg-cover bg-center">
       <h1 className="text-4xl md:text-5xl font-extrabold mb-8 drop-shadow-lg">
-        Login to Focus Tracker
+        Login to Secure your Future
       </h1>
       <form onSubmit={handleLogin} className="flex flex-col gap-4 w-full max-w-md">
         <input

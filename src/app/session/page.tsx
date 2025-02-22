@@ -137,11 +137,6 @@ export default function SessionPage() {
 
       {/* Bottom Section: Stats & Tracker Components */}
       <div className="max-w-4xl mx-auto">
-        {/* Status Row */}
-        <div className="flex justify-around mb-8 text-lg">
-          <p>Tab Active: <span className="font-semibold">✅</span></p>
-          <p>Window Focused: <span className="font-semibold">✅</span></p>
-        </div>
         {/* Detailed Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
