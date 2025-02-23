@@ -4,19 +4,19 @@ import { useState } from "react";
 
 const slides = [
   {
-    image: "/screenshots/session.png",
+    image: "/screenshots/session.jpg",
     description: "Easily lock in your focus and track your productivity.",
   },
   {
-    image: "/screenshots/session_tracked.png",
+    image: "/screenshots/session_tracked.jpg",
     description: "Monitor tab and window activity for maximum efficiency.",
   },
   {
-    image: "/screenshots/feed.png",
+    image: "/screenshots/feed.jpg",
     description: "Connect with a community of focused individuals.",
   },
   {
-    image: "/screenshots/leaderboard.png",
+    image: "/screenshots/leaderboard.jpg",
     description: "Compete with others to find who is the most Locked In.",
   },
 ];
