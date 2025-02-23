@@ -5,12 +5,17 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import WeeklyActivityChart from "@/components/WeeklyActivityChart";
 
 export default function Dashboard() {
   const [session, setSession] = useState<Session | null>(null);
   const [totalFocusTime, setTotalFocusTime] = useState<number>(0);
   const [sessionCount, setSessionCount] = useState<number>(0);
   const [averageFocusTime, setAverageFocusTime] = useState<number>(0);
+  const [weeklyActivity, setWeeklyActivity] = useState<
+    { day: string; total_duration: number }[]
+  >([]);
+  const [streak, setStreak] = useState<number>(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -29,6 +34,8 @@ export default function Dashboard() {
         fetchTotalFocusTime(userId);
         fetchSessionCount(userId);
         fetchAverageFocusTime(userId);
+        fetchWeeklyActivity(userId);
+        fetchCurrentStreak(userId);
       }
     };
 
@@ -36,14 +43,9 @@ export default function Dashboard() {
   }, [router]);
 
   const fetchTotalFocusTime = async (user_id: string) => {
-    if (!user_id) {
-      console.error("🔴 No user ID provided.");
-      return;
-    }
-
     const { data, error } = await supabase.rpc("get_total_focus_time", { uid: user_id });
     if (error) {
-      console.error("🔴 Error fetching total focus time:", error.message);
+      console.error("Error fetching total focus time:", error.message);
       return;
     }
     setTotalFocusTime(Number(data) || 0);
@@ -52,7 +54,7 @@ export default function Dashboard() {
   const fetchSessionCount = async (user_id: string) => {
     const { data, error } = await supabase.rpc("get_session_count", { uid: user_id });
     if (error) {
-      console.error("🔴 Error fetching session count:", error.message);
+      console.error("Error fetching session count:", error.message);
       return;
     }
     setSessionCount(Number(data) || 0);
@@ -61,13 +63,35 @@ export default function Dashboard() {
   const fetchAverageFocusTime = async (user_id: string) => {
     const { data, error } = await supabase.rpc("get_average_focus_time", { uid: user_id });
     if (error) {
-      console.error("🔴 Error fetching average focus time:", error.message);
+      console.error("Error fetching average focus time:", error.message);
       return;
     }
     setAverageFocusTime(Number(data) || 0);
   };
 
-  // Format totalFocusTime into hh:mm:ss format
+  const fetchWeeklyActivity = async (user_id: string) => {
+    const { data, error } = await supabase.rpc("get_weekly_activity", { uid: user_id });
+    if (error) {
+      console.error("Error fetching weekly activity:", error.message);
+      return;
+    }
+    const formattedData =
+      data?.map((item: any) => ({
+        day: item.day,
+        total_duration: Number(item.total_duration) || 0,
+      })) || [];
+    setWeeklyActivity(formattedData);
+  };
+
+  const fetchCurrentStreak = async (user_id: string) => {
+    const { data, error } = await supabase.rpc("get_current_streak", { uid: user_id });
+    if (error) {
+      console.error("Error fetching current streak:", error.message);
+      return;
+    }
+    setStreak(Number(data) || 0);
+  };
+
   const formatTime = (timeInSec: number) => {
     const hrs = Math.floor(timeInSec / 3600);
     const mins = Math.floor((timeInSec % 3600) / 60);
@@ -91,31 +115,41 @@ export default function Dashboard() {
           <div className="text-lg md:text-xl">
             Average Session: <span className="text-blue-500">{formatTime(averageFocusTime)}</span>
           </div>
+          <div className="text-lg md:text-xl">
+            Current Streak: <span className="text-blue-500">{streak} day{streak === 1 ? "" : "s"}</span>
+          </div>
         </div>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center p-8">
-        <div className="flex flex-col gap-6 w-full max-w-md">
+        <div className="w-full max-w-xl mb-8">
+          <WeeklyActivityChart data={weeklyActivity} />
+        </div>
+      </main>
+
+      {/* Footer with horizontally aligned small buttons */}
+      <footer className="w-full p-4 flex justify-center">
+        <div className="flex gap-4">
           <button
             onClick={() => router.push("/leaderboard")}
-            className="bg-white bg-opacity-80 hover:bg-opacity-90 transition-colors w-full px-8 py-4 rounded-full text-xl shadow-xl text-gray-900"
+            className="bg-white bg-opacity-80 hover:bg-opacity-90 transition-colors px-4 py-2 rounded-full text-sm shadow-md text-gray-900"
           >
             View Leaderboard
           </button>
           <button
             onClick={() => router.push("/session")}
-            className="bg-white bg-opacity-80 hover:bg-opacity-90 transition-colors w-full px-8 py-4 rounded-full text-xl shadow-xl text-gray-900"
+            className="bg-white bg-opacity-80 hover:bg-opacity-90 transition-colors px-4 py-2 rounded-full text-sm shadow-md text-gray-900"
           >
             Start Lock Session
           </button>
           <button
             onClick={() => router.push("/feed")}
-            className="bg-white bg-opacity-80 hover:bg-opacity-90 transition-colors w-full px-8 py-4 rounded-full text-xl shadow-xl text-gray-900"
+            className="bg-white bg-opacity-80 hover:bg-opacity-90 transition-colors px-4 py-2 rounded-full text-sm shadow-md text-gray-900"
           >
             View Feed
           </button>
         </div>
-      </main>
+      </footer>
     </div>
   );
 }
