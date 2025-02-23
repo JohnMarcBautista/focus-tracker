@@ -14,7 +14,6 @@ export default function SessionPage() {
   const [authSession, setAuthSession] = useState<Session | null>(null);
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
 
-  // Destructure session tracking state and functions from the context.
   const {
     isRunning,
     isPaused,
@@ -61,28 +60,41 @@ export default function SessionPage() {
     return <p className="p-8 text-center text-xl">Loading or redirecting...</p>;
   }
 
-  // Format elapsedTime into minutes and seconds (with one decimal)
-  const minutes = Math.floor(elapsedTime / 60);
+  // Format elapsedTime into hours, minutes, and seconds (with one decimal for seconds)
+  const hours = Math.floor(elapsedTime / 3600);
+  const minutes = Math.floor((elapsedTime % 3600) / 60);
   const seconds = (elapsedTime % 60).toFixed(1).padStart(4, "0");
 
-  // Compute adjusted window switch count for display.
   const displayWindowSwitches = Math.max(
     windowSwitchCount - Math.floor(tabSwitchCount / 2),
     0
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex flex-col justify-between p-8 text-white bg-[url('/stars-bg.jpg')] bg-cover bg-center">
-      {/* Top Section */}
-      <div className="max-w-3xl mx-auto text-center">
-        <h2 className="text-4xl md:text-5xl font-extrabold mb-4 drop-shadow-lg">
+    <div
+      className={`min-h-screen overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black flex flex-col justify-between p-8 text-white bg-[url('/stars-bg.jpg')] bg-cover bg-center transform origin-center ${
+        isRunning && !isPaused ? "animate-breathing" : ""
+      }`}
+    >
+      {/* Header */}
+      <header className="relative text-center mb-6 z-10">
+        <h2 className="text-4xl md:text-5xl font-extrabold drop-shadow-lg">
           Lock In Session
         </h2>
-        <p className="text-lg md:text-xl mb-8">
+        <p className="text-lg md:text-xl">
           Your focus timer is live. Stats are tracked only when your session is running.
         </p>
-        {/* Project Input */}
-        <div className="mb-8 flex justify-center">
+      </header>
+
+      {/* Main Content (Timer, Input, and Controls) Centered */}
+      <div className="relative flex-grow flex flex-col items-center justify-center z-10">
+        {/* Duration Timer */}
+        <div className="text-6xl md:text-7xl font-bold tracking-wider drop-shadow-2xl mb-4">
+          {hours}:{minutes.toString().padStart(2, "0")}:{seconds}
+        </div>
+
+        {/* Task/Project Name Input */}
+        <div className="mb-6 flex justify-center w-full">
           <input
             type="text"
             placeholder="Enter Task/Project Name"
@@ -91,8 +103,9 @@ export default function SessionPage() {
             className="w-full max-w-md p-3 rounded-lg border border-gray-700 text-black shadow-md focus:outline-none focus:ring-2 focus:ring-gray-600"
           />
         </div>
+
         {/* Control Buttons */}
-        <div className="mb-8 flex flex-wrap justify-center gap-4">
+        <div className="mb-4 flex flex-wrap justify-center gap-4">
           {!isRunning ? (
             <button
               onClick={startSession}
@@ -129,16 +142,11 @@ export default function SessionPage() {
             </>
           )}
         </div>
-        {/* Timer Display */}
-        <div className="text-6xl md:text-7xl font-bold tracking-wider drop-shadow-2xl mb-8">
-          {minutes}:{seconds}
-        </div>
       </div>
 
-      {/* Bottom Section: Stats & Tracker Components */}
-      <div className="max-w-4xl mx-auto">
-        {/* Detailed Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+      {/* Bottom Stats (moved up slightly) */}
+      <div className="relative max-w-4xl mx-auto mb-2 z-10">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-4">
           <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
             <p className="text-sm uppercase">Tab Active Time</p>
             <p className="text-2xl font-bold">{tabActiveTime.toFixed(1)}s</p>
@@ -165,7 +173,6 @@ export default function SessionPage() {
           </div>
         </div>
 
-        {/* Tracker Components */}
         <TabTracker
           isRunning={isRunning && !isPaused}
           onUpdateActive={setTabActiveTime}
@@ -186,7 +193,7 @@ export default function SessionPage() {
 
       {/* Modal for Session Visibility */}
       {showVisibilityModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80 z-20">
           <div className="bg-gray-900 p-8 rounded-xl shadow-2xl text-white w-full max-w-sm">
             <h3 className="text-2xl font-bold mb-4">Share Your Session</h3>
             <p className="mb-6">
@@ -224,6 +231,26 @@ export default function SessionPage() {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes breathing {
+          0% {
+            transform: scale(1);
+            filter: brightness(0.9);
+          }
+          50% {
+            transform: scale(1.005);
+            filter: brightness(1.2);
+          }
+          100% {
+            transform: scale(1);
+            filter: brightness(0.9);
+          }
+        }
+        .animate-breathing {
+          animation: breathing 8s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }

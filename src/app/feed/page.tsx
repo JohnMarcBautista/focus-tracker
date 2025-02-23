@@ -33,7 +33,7 @@ export default function FeedPage() {
       .eq("is_public", true)
       .order("created_at", { ascending: false })
       .range((page - 1) * pageSize, page * pageSize - 1);
-      
+
     if (error) {
       console.error("Error fetching sessions:", error.message);
     } else if (data) {
@@ -49,12 +49,15 @@ export default function FeedPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-8 text-white bg-[url('/stars-bg.jpg')] bg-cover bg-center">
       <h1 className="text-4xl md:text-5xl font-bold mb-10 text-center drop-shadow-lg">
-        Focus Sessions Feed
+        Lock Sessions Feed
       </h1>
-      <div className="space-y-12">
+      <div className="space-y-8">
         {sessions.map((session) => (
-          <div key={session.id} className="bg-gray-800 bg-opacity-90 p-8 rounded-2xl shadow-2xl transform hover:-translate-y-1 transition-all">
-            <div className="mb-6">
+          <div
+            key={session.id}
+            className="bg-gray-800 bg-opacity-90 p-6 rounded-2xl shadow-2xl transform hover:-translate-y-1 transition-all"
+          >
+            <div className="mb-4">
               <h2 className="text-2xl font-semibold">
                 {session.project_name || "Untitled Session"}
               </h2>
@@ -66,14 +69,16 @@ export default function FeedPage() {
                 on {new Date(session.created_at).toLocaleString()}
               </p>
             </div>
-            <div className="mb-8">
-              {/* Emphasized Duration */}
-              <p className="text-5xl md:text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+            <div className="mb-6">
+              {/* Scaled Down Duration Metric */}
+              <p className="text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
                 {Math.floor(session.duration / 3600)}h{" "}
                 {Math.floor((session.duration % 3600) / 60)}m{" "}
                 {session.duration % 60}
               </p>
-              <p className="mt-2 text-sm uppercase tracking-wider text-gray-400">Duration</p>
+              <p className="mt-1 text-sm uppercase tracking-wider text-gray-400">
+                Duration
+              </p>
             </div>
             <div className="text-sm grid grid-cols-2 gap-4 text-gray-300">
               <p>Tab Active: {session.tab_active_time.toFixed(1)}s</p>
