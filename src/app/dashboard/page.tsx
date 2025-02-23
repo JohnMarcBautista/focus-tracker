@@ -1,4 +1,5 @@
 "use client";
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -8,6 +9,8 @@ import { useRouter } from "next/navigation";
 export default function Dashboard() {
   const [session, setSession] = useState<Session | null>(null);
   const [totalFocusTime, setTotalFocusTime] = useState<number>(0);
+  const [sessionCount, setSessionCount] = useState<number>(0);
+  const [averageFocusTime, setAverageFocusTime] = useState<number>(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -22,7 +25,10 @@ export default function Dashboard() {
       setSession(data.session);
 
       if (data.session.user?.id) {
-        fetchTotalFocusTime(data.session.user.id);
+        const userId = data.session.user.id;
+        fetchTotalFocusTime(userId);
+        fetchSessionCount(userId);
+        fetchAverageFocusTime(userId);
       }
     };
 
@@ -36,47 +42,75 @@ export default function Dashboard() {
     }
 
     const { data, error } = await supabase.rpc("get_total_focus_time", { uid: user_id });
-
     if (error) {
       console.error("🔴 Error fetching total focus time:", error.message);
       return;
     }
-
     setTotalFocusTime(Number(data) || 0);
+  };
+
+  const fetchSessionCount = async (user_id: string) => {
+    const { data, error } = await supabase.rpc("get_session_count", { uid: user_id });
+    if (error) {
+      console.error("🔴 Error fetching session count:", error.message);
+      return;
+    }
+    setSessionCount(Number(data) || 0);
+  };
+
+  const fetchAverageFocusTime = async (user_id: string) => {
+    const { data, error } = await supabase.rpc("get_average_focus_time", { uid: user_id });
+    if (error) {
+      console.error("🔴 Error fetching average focus time:", error.message);
+      return;
+    }
+    setAverageFocusTime(Number(data) || 0);
+  };
+
+  // Format totalFocusTime into hh:mm:ss format
+  const formatTime = (timeInSec: number) => {
+    const hrs = Math.floor(timeInSec / 3600);
+    const mins = Math.floor((timeInSec % 3600) / 60);
+    const secs = Math.floor(timeInSec % 60);
+    return `${hrs}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex flex-col text-white bg-[url('/stars-bg.jpg')] bg-cover bg-center">
-      <main className="flex-1 flex flex-col items-center justify-center p-8">
-        <h2 className="text-4xl md:text-5xl font-bold mb-6 drop-shadow-lg">
+      <header className="w-full p-6 text-center">
+        <h2 className="text-4xl md:text-5xl font-bold drop-shadow-lg">
           Welcome, {session?.user.user_metadata.display_name || session?.user.email}
         </h2>
-
-        <div className="mb-8 text-2xl md:text-3xl font-semibold">
-          Total Focus Time:{" "}
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
-            {Math.floor(totalFocusTime / 3600)}:
-            {String(Math.floor((totalFocusTime % 3600) / 60)).padStart(2, "0")}:
-            {String(totalFocusTime % 60).padStart(2, "0")}
-          </span>
+        <div className="mt-4 space-y-2">
+          <div className="text-2xl md:text-3xl font-semibold">
+            Total Focus Time: <span className="text-blue-500">{formatTime(totalFocusTime)}</span>
+          </div>
+          <div className="text-lg md:text-xl">
+            Sessions Completed: <span className="text-blue-500">{sessionCount}</span>
+          </div>
+          <div className="text-lg md:text-xl">
+            Average Session: <span className="text-blue-500">{formatTime(averageFocusTime)}</span>
+          </div>
         </div>
+      </header>
 
-        <div className="flex flex-col md:flex-row gap-6">
+      <main className="flex-1 flex flex-col items-center justify-center p-8">
+        <div className="flex flex-col gap-6 w-full max-w-md">
           <button
             onClick={() => router.push("/leaderboard")}
-            className="bg-green-600 hover:bg-green-700 transition-colors px-8 py-4 rounded-full text-xl shadow-xl"
+            className="bg-white bg-opacity-80 hover:bg-opacity-90 transition-colors w-full px-8 py-4 rounded-full text-xl shadow-xl text-gray-900"
           >
             View Leaderboard
           </button>
           <button
             onClick={() => router.push("/session")}
-            className="bg-green-600 hover:bg-green-700 transition-colors px-8 py-4 rounded-full text-xl shadow-xl"
+            className="bg-white bg-opacity-80 hover:bg-opacity-90 transition-colors w-full px-8 py-4 rounded-full text-xl shadow-xl text-gray-900"
           >
             Start Lock Session
           </button>
           <button
             onClick={() => router.push("/feed")}
-            className="bg-green-600 hover:bg-green-700 transition-colors px-8 py-4 rounded-full text-xl shadow-xl"
+            className="bg-white bg-opacity-80 hover:bg-opacity-90 transition-colors w-full px-8 py-4 rounded-full text-xl shadow-xl text-gray-900"
           >
             View Feed
           </button>
