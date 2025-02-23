@@ -129,7 +129,7 @@ export default function FeedPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-8 text-white bg-[url('/stars-bg.jpg')] bg-cover bg-center">
       <h1 className="text-4xl md:text-5xl font-bold mb-10 text-center drop-shadow-lg">
-        Lock Sessions Feed
+        Feed
       </h1>
       <div className="space-y-8">
         {sessions.map((session) => (
@@ -174,7 +174,7 @@ export default function FeedPage() {
                 className="flex items-center space-x-1 focus:outline-none"
               >
                 <svg
-                  className="w-6 h-6 fill-current text-red-500 hover:text-red-400 transition transform hover:scale-110"
+                  className="w-6 h-6 fill-current text-red-200 hover:text-red-400 transition transform hover:scale-110"
                   viewBox="0 0 24 24"
                 >
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />

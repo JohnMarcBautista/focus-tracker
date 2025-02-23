@@ -79,11 +79,8 @@ export default function SessionPage() {
       {/* Header */}
       <header className="relative text-center mb-6 z-10">
         <h2 className="text-4xl md:text-5xl font-extrabold drop-shadow-lg">
-          Lock In Session
+          Session
         </h2>
-        <p className="text-lg md:text-xl">
-          Your focus timer is live. Stats are tracked only when your session is running.
-        </p>
       </header>
 
       {/* Main Content (Timer, Input, and Controls) Centered */}
