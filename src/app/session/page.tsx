@@ -72,7 +72,7 @@ export default function SessionPage() {
 
   return (
     <div
-      className={`min-h-screen overflow-hidden bg-gradient-to-br from-black via-gray-900 to-black flex flex-col justify-between p-8 text-white bg-[url('/stars-bg.jpg')] bg-cover bg-center transform origin-center ${
+      className={`min-h-screen relative bg-[url('/backgrounds/calm.jpg')] bg-cover bg-center flex flex-col items-center justify-between p-8 text-white transform origin-center ${
         isRunning && !isPaused ? "animate-breathing" : ""
       }`}
     >
@@ -86,18 +86,20 @@ export default function SessionPage() {
       {/* Main Content (Timer, Input, and Controls) Centered */}
       <div className="relative flex-grow flex flex-col items-center justify-center z-10">
         {/* Duration Timer */}
-        <div className="text-6xl md:text-7xl font-bold tracking-wider drop-shadow-2xl mb-4">
-          {hours}:{minutes.toString().padStart(2, "0")}:{seconds}
+        <div className="mb-10">
+          <div className="text-6xl md:text-8xl font-light tracking-widest drop-shadow-xl">
+            {hours}:{minutes.toString().padStart(2, "0")}:{seconds}
+          </div>
         </div>
 
-        {/* Task/Project Name Input */}
-        <div className="mb-6 flex justify-center w-full">
+        {/* Project Name Input with Lower Opacity Background */}
+        <div className="mb-10 w-full">
           <input
             type="text"
-            placeholder="Enter Task/Project Name"
+            placeholder="Enter Project Name..."
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
-            className="w-full max-w-md p-3 rounded-lg border border-gray-700 text-black shadow-md focus:outline-none focus:ring-2 focus:ring-gray-600"
+            className="w-full p-3 rounded-lg border border-gray-700 bg-gray-100 bg-opacity-50 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -134,42 +136,42 @@ export default function SessionPage() {
                 }}
                 className="bg-red-600 hover:bg-red-700 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
               >
-                Stop Session
+                Stop
               </button>
             </>
           )}
         </div>
       </div>
 
-      {/* Bottom Stats (moved up slightly) */}
-      <div className="relative max-w-4xl mx-auto mb-2 z-10">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-4">
-          <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
-            <p className="text-sm uppercase">Tab Active Time</p>
-            <p className="text-2xl font-bold">{tabActiveTime.toFixed(1)}s</p>
+      {/* Bottom Stats: Organized in 2 Rows, 3 Columns, and Nudged Higher */}
+      <div className="relative max-w-4xl mx-auto mt-2 z-10">
+        <div className="grid grid-cols-3 gap-4 text-xs text-gray-300">
+          {/* Column 1: Tab Active above Tab Inactive */}
+          <div className="flex flex-col items-center">
+            <p className="uppercase">Tab Active</p>
+            <p className="text-lg font-semibold">{tabActiveTime.toFixed(1)}s</p>
+            <p className="uppercase mt-1">Tab Inactive</p>
+            <p className="text-lg font-semibold">{tabInactiveTime.toFixed(1)}s</p>
           </div>
-          <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
-            <p className="text-sm uppercase">Tab Inactive Time</p>
-            <p className="text-2xl font-bold">{tabInactiveTime.toFixed(1)}s</p>
+          {/* Column 2: Window Focus above Window Unfocus */}
+          <div className="flex flex-col items-center">
+            <p className="uppercase">Window Focus</p>
+            <p className="text-lg font-semibold">{windowFocusTime.toFixed(1)}s</p>
+            <p className="uppercase mt-1">Window Unfocus</p>
+            <p className="text-lg font-semibold">{windowUnfocusTime.toFixed(1)}s</p>
           </div>
-          <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
-            <p className="text-sm uppercase">Window Focus Time</p>
-            <p className="text-2xl font-bold">{windowFocusTime.toFixed(1)}s</p>
-          </div>
-          <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
-            <p className="text-sm uppercase">Window Unfocus Time</p>
-            <p className="text-2xl font-bold">{windowUnfocusTime.toFixed(1)}s</p>
-          </div>
-          <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
-            <p className="text-sm uppercase">Tab Switches</p>
-            <p className="text-2xl font-bold">{tabSwitchCount}</p>
-          </div>
-          <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg shadow-md">
-            <p className="text-sm uppercase">Window Switches</p>
-            <p className="text-2xl font-bold">{displayWindowSwitches}</p>
+          {/* Column 3: Tab Switches above Window Switches */}
+          <div className="flex flex-col items-center">
+            <p className="uppercase">Tab Switches</p>
+            <p className="text-lg font-semibold">{tabSwitchCount}</p>
+            <p className="uppercase mt-1">Window Switches</p>
+            <p className="text-lg font-semibold">{displayWindowSwitches}</p>
           </div>
         </div>
+      </div>
 
+      {/* Tracker Components */}
+      <div className="relative w-full z-10">
         <TabTracker
           isRunning={isRunning && !isPaused}
           onUpdateActive={setTabActiveTime}
@@ -190,44 +192,47 @@ export default function SessionPage() {
 
       {/* Modal for Session Visibility */}
       {showVisibilityModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80 z-20">
-          <div className="bg-gray-900 p-8 rounded-xl shadow-2xl text-white w-full max-w-sm">
-            <h3 className="text-2xl font-bold mb-4">Share Your Session</h3>
-            <p className="mb-6">
-              Would you like to make your session public so others can see your stats, or keep it private?
-            </p>
-            <div className="flex justify-between">
-              <button
-                onClick={() => {
-                  stopSession(true);
-                  setShowVisibilityModal(false);
-                }}
-                className="bg-green-600 hover:bg-green-700 transition-colors px-4 py-2 rounded"
-              >
-                Public
-              </button>
-              <button
-                onClick={() => {
-                  stopSession(false);
-                  setShowVisibilityModal(false);
-                }}
-                className="bg-gray-600 hover:bg-gray-700 transition-colors px-4 py-2 rounded"
-              >
-                Private
-              </button>
-              <button
-                onClick={() => {
-                  resumeSession();
-                  setShowVisibilityModal(false);
-                }}
-                className="bg-blue-600 hover:bg-blue-700 transition-colors px-4 py-2 rounded"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80 z-20">
+    <div className="bg-gray-900 bg-opacity-90 p-8 rounded-xl shadow-2xl text-white w-full max-w-sm text-center">
+      <h3 className="text-2xl font-bold mb-4">Share Your Session</h3>
+      <p className="mb-6">
+        Would you like to make your session public so others can see your stats, or keep it private?
+      </p>
+      <div className="flex justify-center gap-4 mb-4">
+        <button
+          onClick={() => {
+            stopSession(true);
+            setShowVisibilityModal(false);
+          }}
+          className="bg-green-600 hover:bg-green-700 transition-colors px-6 py-3 rounded-full text-white"
+        >
+          Public
+        </button>
+        <button
+          onClick={() => {
+            stopSession(false);
+            setShowVisibilityModal(false);
+          }}
+          className="bg-gray-600 hover:bg-gray-700 transition-colors px-6 py-3 rounded-full text-white"
+        >
+          Private
+        </button>
+      </div>
+      <div>
+        <button
+          onClick={() => {
+            resumeSession();
+            setShowVisibilityModal(false);
+          }}
+          className="text-blue-400 hover:underline text-sm"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       <style jsx>{`
         @keyframes breathing {
