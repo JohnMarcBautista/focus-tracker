@@ -236,19 +236,16 @@ export default function SessionPage() {
         @keyframes breathing {
           0% {
             transform: scale(1);
-            filter: brightness(0.9);
           }
           50% {
-            transform: scale(1.005);
-            filter: brightness(1.2);
+            transform: scale(1.02);
           }
           100% {
             transform: scale(1);
-            filter: brightness(0.9);
           }
         }
         .animate-breathing {
-          animation: breathing 8s ease-in-out infinite;
+          animation: breathing 6s ease-in-out infinite;
         }
       `}</style>
     </div>
