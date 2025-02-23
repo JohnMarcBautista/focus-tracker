@@ -23,7 +23,22 @@ export default function FeedPage() {
   const [sessions, setSessions] = useState<SessionData[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const [likeCounts, setLikeCounts] = useState<{ [postId: string]: number }>({});
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const pageSize = 10;
+
+  // Fetch the current user on mount.
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        setCurrentUserId(session.user.id);
+      }
+    };
+    getUser();
+  }, []);
 
   const fetchSessions = useCallback(async () => {
     setLoading(true);
@@ -37,10 +52,75 @@ export default function FeedPage() {
     if (error) {
       console.error("Error fetching sessions:", error.message);
     } else if (data) {
-      setSessions((prev) => [...prev, ...(data as unknown as SessionData[])]);
+      const newSessions = data as unknown as SessionData[];
+      setSessions((prev) => [...prev, ...newSessions]);
+      // For each new session, fetch its like count.
+      newSessions.forEach((session) => {
+        fetchLikeCount(session.id);
+      });
     }
     setLoading(false);
   }, [page, pageSize]);
+
+  const fetchLikeCount = async (postId: string) => {
+    const { count, error } = await supabase
+      .from("post_likes")
+      .select("id", { count: "exact", head: true })
+      .eq("post_id", postId);
+    if (error) {
+      console.error("Error fetching like count:", error.message);
+    } else {
+      setLikeCounts((prev) => ({ ...prev, [postId]: count || 0 }));
+    }
+  };
+
+  const handleLike = async (postId: string) => {
+    if (!currentUserId) {
+      console.error("User not logged in!");
+      return;
+    }
+    // Check if the current user has already liked the post.
+    const { data: existingLikes, error: fetchError } = await supabase
+      .from("post_likes")
+      .select("id")
+      .eq("post_id", postId)
+      .eq("user_id", currentUserId);
+
+    if (fetchError) {
+      console.error("Error fetching like:", fetchError.message);
+      return;
+    }
+
+    if (existingLikes && existingLikes.length > 0) {
+      // If already liked, remove the like.
+      const likeId = existingLikes[0].id;
+      const { error: deleteError } = await supabase
+        .from("post_likes")
+        .delete()
+        .eq("id", likeId);
+      if (deleteError) {
+        console.error("Error unliking post:", deleteError.message);
+      } else {
+        setLikeCounts((prev) => ({
+          ...prev,
+          [postId]: Math.max((prev[postId] || 1) - 1, 0),
+        }));
+      }
+    } else {
+      // Otherwise, insert a new like.
+      const { error } = await supabase
+        .from("post_likes")
+        .insert([{ post_id: postId, user_id: currentUserId }]);
+      if (error) {
+        console.error("Error liking post:", error.message);
+      } else {
+        setLikeCounts((prev) => ({
+          ...prev,
+          [postId]: (prev[postId] || 0) + 1,
+        }));
+      }
+    }
+  };
 
   useEffect(() => {
     fetchSessions();
@@ -70,7 +150,6 @@ export default function FeedPage() {
               </p>
             </div>
             <div className="mb-6">
-              {/* Scaled Down Duration Metric */}
               <p className="text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
                 {Math.floor(session.duration / 3600)}h{" "}
                 {Math.floor((session.duration % 3600) / 60)}m{" "}
@@ -87,6 +166,25 @@ export default function FeedPage() {
               <p>Window Unfocus: {session.window_unfocus_time.toFixed(1)}s</p>
               <p>Tab Switches: {session.tab_switches}</p>
               <p>Window Switches: {session.window_switches}</p>
+            </div>
+            {/* Like Button with Enhanced UI */}
+            <div className="flex items-center space-x-2 mt-4">
+              <button
+                onClick={() => handleLike(session.id)}
+                className="flex items-center space-x-1 focus:outline-none"
+              >
+                <svg
+                  className="w-6 h-6 fill-current text-red-500 hover:text-red-400 transition transform hover:scale-110"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+                <span className="text-sm text-gray-200">
+                  {likeCounts[session.id] !== undefined
+                    ? likeCounts[session.id]
+                    : 0}
+                </span>
+              </button>
             </div>
           </div>
         ))}
