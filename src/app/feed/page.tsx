@@ -42,7 +42,6 @@ export default function FeedPage() {
     getUser();
   }, []);
 
-  // Fetch sessions and, for each post, if the streak hasn't been fetched for that user, fetch it.
   const fetchSessions = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -57,9 +56,9 @@ export default function FeedPage() {
     } else if (data) {
       const newSessions = data as unknown as SessionData[];
       setSessions((prev) => [...prev, ...newSessions]);
+      // For each new session, fetch its like count.
       newSessions.forEach((session) => {
         fetchLikeCount(session.id);
-        // For each session's user, if we haven't fetched their streak, fetch it.
         if (!(session.user_id in userStreaks)) {
           fetchUserStreak(session.user_id);
         }
@@ -80,7 +79,6 @@ export default function FeedPage() {
     }
   };
 
-  // Fetch a user's streak using the RPC function "get_current_streak"
   const fetchUserStreak = async (user_id: string) => {
     const { data, error } = await supabase.rpc("get_current_streak", { uid: user_id });
     if (error) {
@@ -95,7 +93,6 @@ export default function FeedPage() {
       console.error("User not logged in!");
       return;
     }
-    // Check if the current user has already liked the post.
     const { data: existingLikes, error: fetchError } = await supabase
       .from("post_likes")
       .select("id")
@@ -108,7 +105,6 @@ export default function FeedPage() {
     }
 
     if (existingLikes && existingLikes.length > 0) {
-      // If already liked, remove the like.
       const likeId = existingLikes[0].id;
       const { error: deleteError } = await supabase
         .from("post_likes")
@@ -123,7 +119,6 @@ export default function FeedPage() {
         }));
       }
     } else {
-      // Otherwise, insert a new like.
       const { error } = await supabase
         .from("post_likes")
         .insert([{ post_id: postId, user_id: currentUserId }]);
@@ -161,8 +156,12 @@ export default function FeedPage() {
                   : session.user_id.substring(0, 6) + "..."}
               </h2>
               <p className="text-xs text-gray-400">
-                {new Date(session.created_at).toLocaleString()}
-              </p>
+  {new Date(session.created_at).toLocaleString(undefined, {
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    dateStyle: "short",
+    timeStyle: "short",
+  })}
+</p>
             </div>
             {/* Description */}
             <div className="mb-6">

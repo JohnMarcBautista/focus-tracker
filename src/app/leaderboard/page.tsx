@@ -6,24 +6,39 @@ import { useRouter } from "next/navigation";
 
 type LeaderboardEntry = {
   display_name: string;
-  total_time: number;
+  total_time?: number;
+  streak?: number;
 };
 
 export default function Leaderboard() {
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [focusLeaderboard, setFocusLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [streakLeaderboard, setStreakLeaderboard] = useState<LeaderboardEntry[]>([]);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchLeaderboard = async () => {
-      const { data, error } = await supabase.rpc("get_leaderboard");
-      if (error) {
-        console.error("🔴 Error fetching leaderboard:", error.message);
+    const fetchLeaderboards = async () => {
+      // Fetch total focus time leaderboard
+      const { data: focusData, error: focusError } = await supabase.rpc("get_leaderboard");
+      if (focusError) {
+        console.error("🔴 Error fetching focus leaderboard:", focusError.message);
         return;
       }
-      setLeaderboard(data);
+      if (focusData) {
+        setFocusLeaderboard(focusData as LeaderboardEntry[]);
+      }
+
+      // Fetch streak leaderboard
+      const { data: streakData, error: streakError } = await supabase.rpc("get_streak_leaderboard");
+      if (streakError) {
+        console.error("🔴 Error fetching streak leaderboard:", streakError.message);
+        return;
+      }
+      if (streakData) {
+        setStreakLeaderboard(streakData as LeaderboardEntry[]);
+      }
     };
 
-    fetchLeaderboard();
+    fetchLeaderboards();
   }, []);
 
   return (
@@ -32,33 +47,74 @@ export default function Leaderboard() {
         Leaderboard
       </h1>
 
-      <div className="w-full max-w-2xl bg-gray-800 bg-opacity-90 p-6 rounded-2xl shadow-2xl">
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="text-left py-3 border-b border-gray-700">Rank</th>
-              <th className="text-left py-3 border-b border-gray-700">User</th>
-              <th className="text-left py-3 border-b border-gray-700">Total Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leaderboard.map((user, index) => (
-              <tr key={user.display_name} className="border-b border-gray-700">
-                <td className="py-3">{index + 1}</td>
-                <td className="py-3">
-                  {user.display_name.length > 12
-                    ? user.display_name.substring(0, 12) + "..."
-                    : user.display_name}
-                </td>
-                <td className="py-3">
-                  {Math.floor(user.total_time / 3600)}h{" "}
-                  {Math.floor((user.total_time % 3600) / 60)}m{" "}
-                  {user.total_time % 60}s
-                </td>
+      {/* Total Focus Time Leaderboard */}
+      <div className="w-full max-w-2xl bg-gray-800 bg-opacity-90 p-6 rounded-2xl shadow-2xl mb-8">
+        <h2 className="text-2xl font-bold mb-4">Total Focus Time</h2>
+        <div className="max-h-80 overflow-y-auto">
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="text-left py-3 border-b border-gray-700">Rank</th>
+                <th className="text-left py-3 border-b border-gray-700">User</th>
+                <th className="text-left py-3 border-b border-gray-700">Total Time</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {focusLeaderboard.map((user, index) => (
+                <tr key={`${user.display_name}-${index}`} className="border-b border-gray-700">
+                  <td className="py-3">{index + 1}</td>
+                  <td className="py-3">
+                    {user.display_name.length > 12
+                      ? user.display_name.substring(0, 12) + "..."
+                      : user.display_name}
+                  </td>
+                  <td className="py-3">
+                    {Math.floor((user.total_time || 0) / 3600)}h{" "}
+                    {Math.floor(((user.total_time || 0) % 3600) / 60)}m{" "}
+                    {(user.total_time || 0) % 60}s
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Streak Leaderboard */}
+      <div className="w-full max-w-2xl bg-gray-800 bg-opacity-90 p-6 rounded-2xl shadow-2xl mb-8">
+        <h2 className="text-2xl font-bold mb-4">Streaks</h2>
+        <div className="max-h-80 overflow-y-auto">
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="text-left py-3 border-b border-gray-700">Rank</th>
+                <th className="text-left py-3 border-b border-gray-700">User</th>
+                <th className="text-left py-3 border-b border-gray-700">Streak</th>
+              </tr>
+            </thead>
+            <tbody>
+              {streakLeaderboard.map((user, index) => (
+                <tr key={`${user.display_name}-${index}`} className="border-b border-gray-700">
+                  <td className="py-3">{index + 1}</td>
+                  <td className="py-3">
+                    {user.display_name.length > 12
+                      ? user.display_name.substring(0, 12) + "..."
+                      : user.display_name}
+                  </td>
+                  <td className="py-3">
+                    {user.streak && user.streak > 0 ? (
+                      <span>
+                        {user.streak} <span className="inline-block">🔥</span>
+                      </span>
+                    ) : (
+                      0
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <button
