@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 const slides = [
   {
@@ -33,69 +34,57 @@ export default function Carousel() {
   };
 
   return (
-    <div className="w-full">
-      <div className="relative overflow-hidden">
-        <div
-          className="flex transition-transform duration-500"
-          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-        >
-          {slides.map((slide, index) => (
-            <div key={index} className="min-w-full flex flex-col items-center">
-              <div className="w-full max-w-sm rounded-xl overflow-hidden aspect-[9/16]">
-                <img
-                  src={slide.image}
-                  alt={`Slide ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <p className="mt-4 text-xl text-center px-4">
-                {slide.description}
-              </p>
+    <div className="relative w-full" style={{ height: "400px" }}>
+      <div
+        className="flex transition-transform duration-500"
+        style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+      >
+        {slides.map((slide, index) => (
+          <div key={index} className="min-w-full flex flex-col items-center">
+            <div className="relative w-full max-w-xs rounded-xl overflow-hidden aspect-[9/16]">
+              <Image
+                src={slide.image}
+                alt={`Slide ${index + 1}`}
+                fill
+                className="object-cover"
+              />
             </div>
-          ))}
-        </div>
-        {/* Navigation Arrows */}
-        <button
-          onClick={prevSlide}
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 hover:bg-opacity-75 p-2 rounded-full"
-          aria-label="Previous Slide"
-        >
-          <svg
-            className="w-6 h-6 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-        </button>
-        <button
-          onClick={nextSlide}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 hover:bg-opacity-75 p-2 rounded-full"
-          aria-label="Next Slide"
-        >
-          <svg
-            className="w-6 h-6 text-white"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-        </button>
+            <p className="mt-4 text-lg text-center px-4">
+              {slide.description}
+            </p>
+          </div>
+        ))}
       </div>
-
-      {/* Dot Indicators rendered below the carousel */}
+      {/* Navigation Arrows */}
+      <button
+        onClick={prevSlide}
+        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 hover:bg-opacity-75 p-2 rounded-full"
+        aria-label="Previous Slide"
+      >
+        <svg
+          className="w-6 h-6 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <button
+        onClick={nextSlide}
+        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-800 bg-opacity-50 hover:bg-opacity-75 p-2 rounded-full"
+        aria-label="Next Slide"
+      >
+        <svg
+          className="w-6 h-6 text-white"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+      {/* Dot Indicators */}
       <div className="mt-4 flex justify-center space-x-2">
         {slides.map((_, index) => (
           <div

@@ -7,14 +7,18 @@ import { Session } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import WeeklyActivityChart from "@/components/WeeklyActivityChart";
 
+// Define the interface for activity data.
+interface ActivityData {
+  day: string;
+  total_duration: number;
+}
+
 export default function Dashboard() {
   const [session, setSession] = useState<Session | null>(null);
   const [totalFocusTime, setTotalFocusTime] = useState<number>(0);
   const [sessionCount, setSessionCount] = useState<number>(0);
   const [averageFocusTime, setAverageFocusTime] = useState<number>(0);
-  const [weeklyActivity, setWeeklyActivity] = useState<
-    { day: string; total_duration: number }[]
-  >([]);
+  const [weeklyActivity, setWeeklyActivity] = useState<ActivityData[]>([]);
   const [streak, setStreak] = useState<number>(0);
   const router = useRouter();
 
@@ -127,7 +131,6 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {/* Footer with horizontally aligned small buttons */}
       <footer className="w-full p-4 flex justify-center">
         <div className="flex gap-4">
           <button
