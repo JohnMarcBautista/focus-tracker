@@ -25,6 +25,8 @@ export default function FeedPage() {
   const [page, setPage] = useState(1);
   const [likeCounts, setLikeCounts] = useState<{ [postId: string]: number }>({});
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  // Mapping of user id to their current streak
+  const [userStreaks, setUserStreaks] = useState<{ [userId: string]: number }>({});
   const pageSize = 10;
 
   // Fetch the current user on mount.
@@ -40,6 +42,7 @@ export default function FeedPage() {
     getUser();
   }, []);
 
+  // Fetch sessions and, for each post, if the streak hasn't been fetched for that user, fetch it.
   const fetchSessions = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -54,13 +57,16 @@ export default function FeedPage() {
     } else if (data) {
       const newSessions = data as unknown as SessionData[];
       setSessions((prev) => [...prev, ...newSessions]);
-      // For each new session, fetch its like count.
       newSessions.forEach((session) => {
         fetchLikeCount(session.id);
+        // For each session's user, if we haven't fetched their streak, fetch it.
+        if (!(session.user_id in userStreaks)) {
+          fetchUserStreak(session.user_id);
+        }
       });
     }
     setLoading(false);
-  }, [page, pageSize]);
+  }, [page, pageSize, userStreaks]);
 
   const fetchLikeCount = async (postId: string) => {
     const { count, error } = await supabase
@@ -72,6 +78,16 @@ export default function FeedPage() {
     } else {
       setLikeCounts((prev) => ({ ...prev, [postId]: count || 0 }));
     }
+  };
+
+  // Fetch a user's streak using the RPC function "get_current_streak"
+  const fetchUserStreak = async (user_id: string) => {
+    const { data, error } = await supabase.rpc("get_current_streak", { uid: user_id });
+    if (error) {
+      console.error("Error fetching streak for user", user_id, ":", error.message);
+      return;
+    }
+    setUserStreaks((prev) => ({ ...prev, [user_id]: Number(data) || 0 }));
   };
 
   const handleLike = async (postId: string) => {
@@ -132,25 +148,31 @@ export default function FeedPage() {
         Feed
       </h1>
       <div className="space-y-8">
-        {sessions.map((session) => (
+        {sessions.map((session, index) => (
           <div
-            key={session.id}
+            key={`${session.id}-${index}`}
             className="bg-gray-800 bg-opacity-90 p-6 rounded-2xl shadow-2xl transform hover:-translate-y-1 transition-all"
           >
+            {/* User's Name and Timestamp */}
             <div className="mb-4">
-              <h2 className="text-2xl font-semibold">
-                {session.project_name || "Untitled Session"}
-              </h2>
-              <p className="text-sm text-gray-400">
-                Posted by{" "}
+              <h2 className="text-xl md:text-2xl font-bold">
                 {session.user && session.user.display_name
                   ? session.user.display_name
-                  : session.user_id.substring(0, 6) + "..."}{" "}
-                on {new Date(session.created_at).toLocaleString()}
+                  : session.user_id.substring(0, 6) + "..."}
+              </h2>
+              <p className="text-xs text-gray-400">
+                {new Date(session.created_at).toLocaleString()}
               </p>
             </div>
+            {/* Description */}
             <div className="mb-6">
-              <p className="text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-blue-500">
+              <p className="text-2xl md:text-3xl font-semibold">
+                {session.project_name || "Untitled Session"}
+              </p>
+            </div>
+            {/* Duration */}
+            <div className="mb-4">
+              <p className="text-3xl md:text-4xl font-extrabold">
                 {Math.floor(session.duration / 3600)}h{" "}
                 {Math.floor((session.duration % 3600) / 60)}m{" "}
                 {session.duration % 60}
@@ -159,7 +181,8 @@ export default function FeedPage() {
                 Duration
               </p>
             </div>
-            <div className="text-sm grid grid-cols-2 gap-4 text-gray-300">
+            {/* Tab/Window Stats */}
+            <div className="text-xs grid grid-cols-2 gap-2 text-gray-300 mb-4">
               <p>Tab Active: {session.tab_active_time.toFixed(1)}s</p>
               <p>Tab Inactive: {session.tab_inactive_time.toFixed(1)}s</p>
               <p>Window Focus: {session.window_focus_time.toFixed(1)}s</p>
@@ -167,24 +190,33 @@ export default function FeedPage() {
               <p>Tab Switches: {session.tab_switches}</p>
               <p>Window Switches: {session.window_switches}</p>
             </div>
-            {/* Like Button with Enhanced UI */}
-            <div className="flex items-center space-x-2 mt-4">
+            {/* Like Button & Streak Indicator */}
+            <div className="flex items-center space-x-2">
               <button
                 onClick={() => handleLike(session.id)}
-                className="flex items-center space-x-1 focus:outline-none"
+                className="flex items-center focus:outline-none"
               >
                 <svg
-                  className="w-6 h-6 fill-current text-red-200 hover:text-red-400 transition transform hover:scale-110"
+                  className={`w-6 h-6 fill-current transition transform hover:scale-110 ${
+                    likeCounts[session.id] > 0 ? "text-red-600" : "text-red-200"
+                  }`}
                   viewBox="0 0 24 24"
                 >
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                 </svg>
                 <span className="text-sm text-gray-200">
-                  {likeCounts[session.id] !== undefined
-                    ? likeCounts[session.id]
-                    : 0}
+                  {likeCounts[session.id] !== undefined ? likeCounts[session.id] : 0}
                 </span>
               </button>
+              {/* Streak Indicator */}
+              {userStreaks[session.user_id] && userStreaks[session.user_id] >= 1 && (
+                <div className="flex items-center text-sm text-yellow-400">
+                  <span className="mr-1">🔥</span>
+                  <span>
+                    {userStreaks[session.user_id]} day{userStreaks[session.user_id] === 1 ? "" : "s"}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         ))}
