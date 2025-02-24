@@ -79,11 +79,13 @@ export default function Dashboard() {
       console.error("Error fetching weekly activity:", error.message);
       return;
     }
-    const formattedData =
-      data?.map((item: any) => ({
-        day: item.day,
-        total_duration: Number(item.total_duration) || 0,
-      })) || [];
+    // Cast the data to ActivityData[] to satisfy TypeScript.
+    const formattedData: ActivityData[] = data
+      ? (data as ActivityData[]).map((item) => ({
+          day: item.day,
+          total_duration: Number(item.total_duration) || 0,
+        }))
+      : [];
     setWeeklyActivity(formattedData);
   };
 
