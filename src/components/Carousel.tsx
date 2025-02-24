@@ -43,7 +43,7 @@ export default function Carousel() {
         {slides.map((slide, index) => (
           <div key={index} className="min-w-full flex flex-col items-center">
             {/* Image container with a fixed height of 250px */}
-            <div className="relative w-full max-w-xs rounded-xl overflow-hidden" style={{ height: "400px" }}>
+            <div className="relative w-full max-w-xs rounded-xl overflow-hidden" style={{ height: "500px" }}>
               <Image
                 src={slide.image}
                 alt={`Slide ${index + 1}`}
