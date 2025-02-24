@@ -50,13 +50,18 @@ export default function FeedPage() {
       .eq("is_public", true)
       .order("created_at", { ascending: false })
       .range((page - 1) * pageSize, page * pageSize - 1);
-
+  
     if (error) {
       console.error("Error fetching sessions:", error.message);
     } else if (data) {
       const newSessions = data as unknown as SessionData[];
-      setSessions((prev) => [...prev, ...newSessions]);
-      // For each new session, fetch its like count.
+      // Deduplicate: Only add sessions that are not already in state (based on id)
+      setSessions((prev) => {
+        const existingIds = new Set(prev.map((s) => s.id));
+        const uniqueNewSessions = newSessions.filter((s) => !existingIds.has(s.id));
+        return [...prev, ...uniqueNewSessions];
+      });
+      // For each new session, fetch its like count and streak if needed.
       newSessions.forEach((session) => {
         fetchLikeCount(session.id);
         if (!(session.user_id in userStreaks)) {
@@ -66,6 +71,7 @@ export default function FeedPage() {
     }
     setLoading(false);
   }, [page, pageSize, userStreaks]);
+  
 
   const fetchLikeCount = async (postId: string) => {
     const { count, error } = await supabase
@@ -138,7 +144,7 @@ export default function FeedPage() {
   }, [fetchSessions]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-8 text-white bg-[url('/stars-bg.jpg')] bg-cover bg-center">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-8 text-white bg-[url('/backgrounds/milky.jpg')] bg-contain bg-center">
       <h1 className="text-4xl md:text-5xl font-bold mb-10 text-center drop-shadow-lg">
         Feed
       </h1>
@@ -156,12 +162,12 @@ export default function FeedPage() {
                   : session.user_id.substring(0, 6) + "..."}
               </h2>
               <p className="text-xs text-gray-400">
-  {new Date(session.created_at).toLocaleString(undefined, {
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    dateStyle: "short",
-    timeStyle: "short",
-  })}
-</p>
+                {new Date(session.created_at).toLocaleString(undefined, {
+                  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                  dateStyle: "short",
+                  timeStyle: "short",
+                })}
+              </p>
             </div>
             {/* Description */}
             <div className="mb-6">
@@ -207,7 +213,6 @@ export default function FeedPage() {
                   {likeCounts[session.id] !== undefined ? likeCounts[session.id] : 0}
                 </span>
               </button>
-              {/* Streak Indicator */}
               {userStreaks[session.user_id] && userStreaks[session.user_id] >= 1 && (
                 <div className="flex items-center text-sm text-yellow-400">
                   <span className="mr-1">🔥</span>
