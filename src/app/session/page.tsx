@@ -13,6 +13,7 @@ export default function SessionPage() {
   const router = useRouter();
   const [authSession, setAuthSession] = useState<Session | null>(null);
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
+  const [selectedDuration, setSelectedDuration] = useState<number>(0); // Duration in seconds
 
   const {
     isRunning,
@@ -41,6 +42,7 @@ export default function SessionPage() {
     setIsTabActive,
     setIsWindowFocused,
     setUserId,
+    setElapsedTime,
   } = useSession();
 
   useEffect(() => {
@@ -60,10 +62,40 @@ export default function SessionPage() {
     return <p className="p-8 text-center text-xl">Loading or redirecting...</p>;
   }
 
-  // Format elapsedTime into hours, minutes, and seconds (with one decimal for seconds)
-  const hours = Math.floor(elapsedTime / 3600);
-  const minutes = Math.floor((elapsedTime % 3600) / 60);
-  const seconds = (elapsedTime % 60).toFixed(1).padStart(4, "0");
+  // Format remaining time into hours, minutes, and seconds
+  const formatTime = (timeInSeconds: number) => {
+    // Round up to nearest second for display
+    const roundedSeconds = Math.ceil(timeInSeconds);
+    
+    const hours = Math.floor(roundedSeconds / 3600);
+    const minutes = Math.floor((roundedSeconds % 3600) / 60);
+    const seconds = Math.floor(roundedSeconds % 60).toString().padStart(2, "0");
+    return { hours, minutes, seconds };
+  };
+
+  const { hours, minutes, seconds } = formatTime(elapsedTime);
+
+  // Update duration options to include test option
+  const durationOptions = [
+    { label: "10 seconds", value: 10 },  // Test option
+    { label: "10 minutes", value: 600 },
+    { label: "30 minutes", value: 1800 },
+    { label: "1 hour", value: 3600 },
+  ];
+
+  // Modified start session handler
+  const handleStartSession = () => {
+    if (selectedDuration > 0) {
+      startSession(selectedDuration);
+    }
+  };
+
+  // Modified duration selection handler
+  const handleDurationSelect = (duration: number) => {
+    setSelectedDuration(duration);
+    // Update the display time immediately
+    setElapsedTime(duration);
+  };
 
   const displayWindowSwitches = Math.max(
     windowSwitchCount - Math.floor(tabSwitchCount / 2),
@@ -72,7 +104,7 @@ export default function SessionPage() {
 
   return (
     <div
-      className={`min-h-screen relative bg-[url('/backgrounds/calm.jpg')] bg-cover bg-center flex flex-col items-center justify-between p-8 text-white transform origin-center ${
+      className={`min-h-screen relative bg-[url('/backgrounds/milky.jpg')] bg-cover bg-center flex flex-col items-center justify-between p-8 text-white transform origin-center ${
         isRunning && !isPaused ? "animate-breathing" : ""
       }`}
     >
@@ -83,16 +115,35 @@ export default function SessionPage() {
         </h2>
       </header>
 
-      {/* Main Content (Timer, Input, and Controls) Centered */}
+      {/* Main Content */}
       <div className="relative flex-grow flex flex-col items-center justify-center z-10">
-        {/* Duration Timer */}
+        {/* Duration Selection */}
+        {!isRunning && (
+          <div className="mb-8 flex flex-wrap justify-center gap-4">
+            {durationOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleDurationSelect(option.value)}
+                className={`px-6 py-3 rounded-full text-lg transition-colors ${
+                  selectedDuration === option.value
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-600 bg-opacity-50 hover:bg-gray-700"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Timer Display */}
         <div className="mb-10">
           <div className="text-6xl md:text-8xl font-light tracking-widest drop-shadow-xl">
-            {hours}:{minutes.toString().padStart(2, "0")}:{seconds}
+            {hours}:{minutes}:{seconds}
           </div>
         </div>
 
-        {/* Project Name Input with Lower Opacity Background */}
+        {/* Project Name Input */}
         <div className="mb-10 w-full">
           <input
             type="text"
@@ -107,10 +158,23 @@ export default function SessionPage() {
         <div className="mb-4 flex flex-wrap justify-center gap-4">
           {!isRunning ? (
             <button
-              onClick={startSession}
-              className="bg-green-600 hover:bg-green-700 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
+              onClick={handleStartSession}
+              disabled={selectedDuration === 0}
+              className={`px-8 py-3 rounded-full text-xl shadow-lg ${
+                selectedDuration === 0
+                  ? "bg-gray-600 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700 transition-colors"
+              }`}
             >
               Lock In
+            </button>
+          ) : elapsedTime <= 0 ? (
+            // Show Complete button when timer reaches zero
+            <button
+              onClick={() => setShowVisibilityModal(true)}
+              className="bg-purple-600 hover:bg-purple-700 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
+            >
+              Complete
             </button>
           ) : (
             <>
@@ -130,10 +194,7 @@ export default function SessionPage() {
                 </button>
               )}
               <button
-                onClick={() => {
-                  pauseSession();
-                  setShowVisibilityModal(true);
-                }}
+                onClick={() => setShowVisibilityModal(true)}
                 className="bg-red-600 hover:bg-red-700 transition-colors px-8 py-3 rounded-full text-xl shadow-lg"
               >
                 Stop
@@ -192,47 +253,35 @@ export default function SessionPage() {
 
       {/* Modal for Session Visibility */}
       {showVisibilityModal && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80 z-20">
-    <div className="bg-gray-900 bg-opacity-90 p-8 rounded-xl shadow-2xl text-white w-full max-w-sm text-center">
-      <h3 className="text-2xl font-bold mb-4">Share Your Session</h3>
-      <p className="mb-6">
-        Would you like to make your session public so others can see your stats, or keep it private?
-      </p>
-      <div className="flex justify-center gap-4 mb-4">
-        <button
-          onClick={() => {
-            stopSession(true);
-            setShowVisibilityModal(false);
-          }}
-          className="bg-green-600 hover:bg-green-700 transition-colors px-6 py-3 rounded-full text-white"
-        >
-          Public
-        </button>
-        <button
-          onClick={() => {
-            stopSession(false);
-            setShowVisibilityModal(false);
-          }}
-          className="bg-gray-600 hover:bg-gray-700 transition-colors px-6 py-3 rounded-full text-white"
-        >
-          Private
-        </button>
-      </div>
-      <div>
-        <button
-          onClick={() => {
-            resumeSession();
-            setShowVisibilityModal(false);
-          }}
-          className="text-blue-400 hover:underline text-sm"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80 z-20">
+          <div className="bg-gray-900 bg-opacity-90 p-8 rounded-xl shadow-2xl text-white w-full max-w-sm text-center">
+            <h3 className="text-2xl font-bold mb-4">Share Your Session</h3>
+            <p className="mb-6">
+              Would you like to make your session public so others can see your stats, or keep it private?
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => {
+                  stopSession(true);
+                  setShowVisibilityModal(false);
+                }}
+                className="bg-green-600 hover:bg-green-700 transition-colors px-6 py-3 rounded-full text-white"
+              >
+                Public
+              </button>
+              <button
+                onClick={() => {
+                  stopSession(false);
+                  setShowVisibilityModal(false);
+                }}
+                className="bg-gray-600 hover:bg-gray-700 transition-colors px-6 py-3 rounded-full text-white"
+              >
+                Private
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         @keyframes breathing {

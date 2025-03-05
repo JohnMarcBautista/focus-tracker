@@ -142,7 +142,6 @@ export default function FeedPage() {
   useEffect(() => {
     fetchSessions();
   }, [fetchSessions]);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-8 text-white bg-[url('/backgrounds/milky.jpg')] bg-contain bg-center">
       <h1 className="text-4xl md:text-5xl font-bold mb-10 text-center drop-shadow-lg">
@@ -213,7 +212,7 @@ export default function FeedPage() {
                   {likeCounts[session.id] !== undefined ? likeCounts[session.id] : 0}
                 </span>
               </button>
-              {userStreaks[session.user_id] && userStreaks[session.user_id] >= 1 && (
+              {userStreaks[session.user_id] && userStreaks[session.user_id] > 0 && (
                 <div className="flex items-center text-sm text-yellow-400">
                   <span className="mr-1">🔥</span>
                   <span>
@@ -240,3 +239,4 @@ export default function FeedPage() {
     </div>
   );
 }
+

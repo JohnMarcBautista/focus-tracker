@@ -77,6 +77,7 @@ export default function Dashboard() {
     const { data, error } = await supabase.rpc("get_weekly_activity", { uid: user_id });
     if (error) {
       console.error("Error fetching weekly activity:", error.message);
+      setWeeklyActivity([]); // Set empty array as fallback
       return;
     }
     // Cast the data to ActivityData[] to satisfy TypeScript.
